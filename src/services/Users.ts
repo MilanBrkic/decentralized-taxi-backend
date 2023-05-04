@@ -3,7 +3,7 @@ import Joi from 'joi';
 import { reach } from '..';
 import userModel from '../db/model/UserModel';
 import { JoiValidation } from './validation/Validation';
-import { loginSchema, registerSchema } from './validation/Schemas';
+import { addWalletSchema, loginSchema, registerSchema } from './validation/Schemas';
 import { encryptService } from './EncryptService';
 
 export async function register(req: Request, res: Response): Promise<Response> {
@@ -64,7 +64,31 @@ function validateMnemonic(mnemonic: string): void {
   }
 }
 
-export async function getBalance(req: Request, res: Response): Promise<Response> {
-  await reach.getBalance();
+export async function addWallet(req: Request, res: Response): Promise<Response> {
+  const body = req.body;
+
+  try {
+    JoiValidation.validate(addWalletSchema, body);
+    validateMnemonic(body.mnemonic);
+  } catch (error) {
+    return res.status(400).json({ error });
+  }
+
+  const address = await reach.newAccountFromMnemonic(body.mnemonic);
+  const userByAddress = await userModel.findByAddress(address.networkAccount.addr);
+  if (userByAddress) {
+    return res.status(400).json({ message: 'address is already used in app' });
+  }
+
+  const userByUsername = await userModel.findByUsername(body.username);
+  if (!userByUsername) {
+    return res.status(400).json({ message: 'user not found' });
+  }
+
+  userByUsername.address = address.networkAccount.addr;
+  userByUsername.encryptedMnemonic = encryptService.encrypt(body.mnemonic);
+
+  await userByUsername.save();
+
   return res.status(200).json({ message: 'wallet created' });
 }

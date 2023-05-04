@@ -12,10 +12,10 @@ export class ReachService {
     this.stdlib.setProviderByName('TestNet');
   }
 
-  async newAccountFromMnemonic(secret: string): Promise<string> {
+  async newAccountFromMnemonic(secret: string): Promise<IAccount<any, any, any, any, any>> {
     const account: IAccount<any, any, any, any, any> = await this.stdlib.newAccountFromMnemonic(secret);
 
-    return account.networkAccount.addr;
+    return account;
   }
 
   async getBalance(): Promise<void> {

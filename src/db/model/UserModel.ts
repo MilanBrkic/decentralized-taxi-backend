@@ -1,9 +1,12 @@
 import mongoose, { Schema } from 'mongoose';
 import { IUser } from '../../entities/User';
+
 const userSchema = new Schema({
   password: String,
   username: String,
   phoneNumber: String,
+  address: String,
+  encryptedMnemonic: String,
 });
 
 class UserModel {
@@ -27,7 +30,7 @@ class UserModel {
     return user as unknown as IUser;
   }
 
-  public async findByUsername(username: string): Promise<IUser | null> {
+  public async findByUsername(username: string): Promise<any | null> {
     const user = (await this.model.find({ username }).exec())[0];
     return user as unknown as IUser;
   }

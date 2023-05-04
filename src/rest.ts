@@ -1,6 +1,6 @@
 import express from 'express';
 import crypto from 'crypto';
-import { getBalance, login, register } from './services/Users';
+import { addWallet, login, register } from './services/Users';
 import Config from '../config/Config';
 import { encryptService } from './services/EncryptService';
 
@@ -15,7 +15,7 @@ export function initHttpServer() {
 
   app.post('/register', register);
   app.post('/login', login);
-  app.get('/balance', getBalance);
+  app.post('/wallet', addWallet);
 
   app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);

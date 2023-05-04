@@ -11,6 +11,11 @@ export const loginSchema = Joi.object({
   password: Joi.string().required(),
 });
 
+export const addWalletSchema = Joi.object({
+  username: Joi.string().required(),
+  mnemonic: Joi.string().required(),
+});
+
 const mnemonicSchema = Joi.object({
   mnemonic: Joi.string().required(),
 });
