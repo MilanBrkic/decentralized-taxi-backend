@@ -3,7 +3,7 @@ import Joi from 'joi';
 export const registerSchema = Joi.object({
   username: Joi.string().required(),
   password: Joi.string().required().min(6),
-  phoneNumber: Joi.string().required(),
+  phone_number: Joi.string().required(),
 });
 
 export const loginSchema = Joi.object({
@@ -14,6 +14,18 @@ export const loginSchema = Joi.object({
 export const addWalletSchema = Joi.object({
   username: Joi.string().required(),
   mnemonic: Joi.string().required(),
+});
+export const coordinatesSchema = Joi.object({
+  latitude: Joi.number().required(),
+  longitude: Joi.number().required(),
+});
+
+export const createRideSchema = Joi.object({
+  passenger_username: Joi.string().required(),
+  driver_username: Joi.string().required(),
+  from_coordinates: coordinatesSchema.required(),
+  to_coordinates: coordinatesSchema.required(),
+  price: Joi.number().required(),
 });
 
 const mnemonicSchema = Joi.object({

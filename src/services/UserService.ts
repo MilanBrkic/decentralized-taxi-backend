@@ -19,7 +19,7 @@ export async function register(req: Request, res: Response): Promise<Response> {
   if (user) {
     return res.status(400).json({ error: 'username already taken' });
   } else {
-    const phoneNumber = body.phoneNumber.replace(/[-_\s,]/g, '');
+    const phoneNumber = body.phone_number.replace(/[-_\s,]/g, '');
     const userByPhone = await userModel.findByPhoneNumber(phoneNumber);
     if (userByPhone) {
       return res.status(400).json({ error: 'phone number already taken' });
@@ -90,5 +90,5 @@ export async function addWallet(req: Request, res: Response): Promise<Response> 
 
   await userByUsername.save();
 
-  return res.status(200).json({ message: 'wallet created' });
+  return res.status(200).json({ message: 'wallet added' });
 }

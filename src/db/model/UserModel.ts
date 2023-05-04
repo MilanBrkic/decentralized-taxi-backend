@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 import { IUser } from '../../entities/User';
 
-const userSchema = new Schema({
+export const userSchema = new Schema({
   password: String,
   username: String,
   phoneNumber: String,
