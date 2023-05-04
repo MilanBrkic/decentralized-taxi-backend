@@ -6,6 +6,11 @@ export const registerSchema = Joi.object({
   phoneNumber: Joi.string().required(),
 });
 
+export const loginSchema = Joi.object({
+  username: Joi.string().required(),
+  password: Joi.string().required(),
+});
+
 const mnemonicSchema = Joi.object({
   mnemonic: Joi.string().required(),
 });

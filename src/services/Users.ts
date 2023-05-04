@@ -3,7 +3,7 @@ import Joi from 'joi';
 import { reach } from '..';
 import userModel from '../db/model/UserModel';
 import { JoiValidation } from './validation/Validation';
-import { registerSchema } from './validation/Schemas';
+import { loginSchema, registerSchema } from './validation/Schemas';
 import { encryptService } from './EncryptService';
 
 export async function register(req: Request, res: Response): Promise<Response> {
@@ -27,6 +27,29 @@ export async function register(req: Request, res: Response): Promise<Response> {
       const encryptedPassword = encryptService.hash(body.password);
       await userModel.insert(body.username, encryptedPassword, phoneNumber);
       return res.status(200).json({ message: 'user created' });
+    }
+  }
+}
+
+export async function login(req: Request, res: Response): Promise<Response> {
+  const body = req.body;
+
+  try {
+    JoiValidation.validate(loginSchema, body);
+  } catch (error) {
+    return res.status(400).json({ error });
+  }
+
+  const user = await userModel.findByUsername(body.username);
+  if (!user) {
+    return res.status(400).json({ error: 'user not found' });
+  } else {
+    const encryptedPassword = encryptService.hash(body.password);
+    if (user.password !== encryptedPassword) {
+      return res.status(400).json({ error: 'wrong password' });
+    } else {
+      const { phoneNumber, username } = user;
+      return res.status(200).json({ phoneNumber, username });
     }
   }
 }
