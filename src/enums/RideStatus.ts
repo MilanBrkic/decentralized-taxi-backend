@@ -1,6 +1,8 @@
 export enum RideStatus {
   Created = 'created',
+  Deployed = 'deployed',
   Started = 'started',
   Finished = 'finished',
-  Timeout = 'timeout',
+  BeforeStartTimeout = 'before_start_timeout',
+  BeforeEndTimeout = 'before_end_timeout',
 }

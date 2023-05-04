@@ -32,15 +32,23 @@ export async function createRide(req: Request, res: Response): Promise<Response>
     return res.status(400).json({ error: 'driver not found' });
   }
 
-  await rideModel.create(passengerDb, driverDb, body.from_coordinates, body.to_coordinates, body.price);
+  const ride = await rideModel.create(passengerDb, driverDb, body.from_coordinates, body.to_coordinates, body.price);
+
+  console.log(
+    `Ride inserted in db, waiting for it's contract to be deployed | Passenger: ${passengerDb.username} | Driver: ${driverDb.username} | RideId: ${ride._id}`
+  );
 
   const passenger = new User(passengerDb);
   const driver = new User(driverDb);
 
   await Promise.all([passenger.setWallet(), driver.setWallet()]);
 
-  await reach.launchRide(passenger, driver, body.price);
+  const contractInfo = await reach.launchRide(passenger, driver, body.price, ride._id);
 
-  console.log(`ride created | Passenger: ${passengerDb.username} | Driver: ${driverDb.username}`);
+  await rideModel.updateContractInfo(ride._id, contractInfo);
+
+  console.log(
+    `ride created | Passenger: ${passengerDb.username} | Driver: ${driverDb.username} |  RideId: ${ride._id}  | ContractInfo: ${contractInfo} | Price: ${body.price}`
+  );
   return res.status(200).json({ message: 'ride started' });
 }

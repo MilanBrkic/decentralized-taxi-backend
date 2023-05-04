@@ -4,6 +4,8 @@ import { IUserDb } from '../interface/IUserDb';
 import { RideStatus } from '../../enums/RideStatus';
 import { coordinateModelSchema } from './CoordinateModel';
 import { userSchema } from './UserModel';
+import { IRideDb } from '../interface/IRideDb';
+import { ReachContractInfo } from '../../types/ReachTypes';
 
 const rideSchema = new Schema({
   passenger: userSchema,
@@ -14,6 +16,7 @@ const rideSchema = new Schema({
   status: String,
   createdAt: Date,
   updatedAt: Date,
+  contractInfo: Object,
 });
 
 class RideModel {
@@ -28,8 +31,8 @@ class RideModel {
     fromCoordinates: ICoordinatesDb,
     toCoordinates: ICoordinatesDb,
     price: number
-  ): Promise<any | null> {
-    return this.model.create({
+  ): Promise<IRideDb> {
+    const ride = this.model.create({
       passenger,
       driver,
       fromCoordinates,
@@ -39,6 +42,16 @@ class RideModel {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+
+    return ride as unknown as IRideDb;
+  }
+
+  public async updateStatus(rideId: string, status: RideStatus): Promise<void> {
+    await this.model.updateOne({ _id: rideId }, { status, updatedAt: new Date() }).exec();
+  }
+
+  public async updateContractInfo(rideId: string, contractInfo: ReachContractInfo): Promise<void> {
+    await this.model.updateOne({ _id: rideId }, { contractInfo, updatedAt: new Date() }).exec();
   }
 }
 

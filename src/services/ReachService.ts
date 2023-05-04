@@ -1,9 +1,11 @@
 import { loadStdlib } from '@reach-sh/stdlib';
 import { IAccount } from '@reach-sh/stdlib/dist/types/shared_impl';
 import Config, { algorandConfig } from '../config/Config';
+import rideModel from '../db/model/RideModel';
 import { User } from '../entities/User';
+import { RideStatus } from '../enums/RideStatus';
 import * as backend from '../smart-contracts/index.main';
-import { ReachAccount, ReachContract, ReachEvent, ReachStdlib } from '../types/ReachTypes';
+import { ReachAccount, ReachContract, ReachContractInfo, ReachEvent, ReachStdlib } from '../types/ReachTypes';
 
 export class ReachService {
   stdlib!: ReachStdlib;
@@ -34,8 +36,6 @@ export class ReachService {
       feePercentage: Config.FEE_PERCENTAGE,
       depositPercentage: Config.DEPOSIT_PERCENTAGE,
       ready: () => {
-        console.log('contract deployed');
-
         throw 666;
       },
     };
@@ -52,7 +52,7 @@ export class ReachService {
     return account;
   }
 
-  async launchRide(passenger: User, driver: User, price: number) {
+  async launchRide(passenger: User, driver: User, price: number, rideId: string): Promise<ReachContractInfo> {
     const adminContract: ReachContract = reach.adminAccount.contract(backend);
     const contractInfo = adminContract.getInfo();
     const passengerContract = passenger.wallet.contract(backend, contractInfo);
@@ -74,6 +74,13 @@ export class ReachService {
       },
     };
 
+    this.adminInteract.ready = async () => {
+      console.log(`contract deployed | RideId: ${rideId}`);
+      await rideModel.updateStatus(rideId, RideStatus.Deployed);
+
+      throw 666;
+    };
+
     try {
       await Promise.all([
         adminContract.participants.Admin(this.adminInteract),
@@ -89,14 +96,17 @@ export class ReachService {
     setTimeout(
       () =>
         this.adminInterfereStart(reach.adminAccount, contractInfo)
-          .then(() => {
-            console.log('Admin interfered on ride start');
+          .then(async () => {
+            await rideModel.updateStatus(rideId, RideStatus.BeforeStartTimeout);
+            console.log(`Admin interfered on ride start | RideId: ${rideId}`);
           })
           .catch((error) => {
             console.log("Admin tried to interfere but it's too late", error);
           }),
-      2 * 60 * 1000
+      10 * 1000
     );
+
+    return contractInfo;
   }
 }
 

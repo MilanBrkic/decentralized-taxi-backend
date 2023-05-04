@@ -3,6 +3,7 @@ import { ICoordinatesDb } from './ICoordinatesDb';
 import { IUserDb } from './IUserDb';
 
 export interface IRideDb {
+  _id: string;
   passenger: IUserDb;
   driver: IUserDb;
   fromCoordinates: ICoordinatesDb;
