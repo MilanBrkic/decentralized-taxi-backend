@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import rideModel from '../db/model/RideModel';
 import userModel from '../db/model/UserModel';
+import { User } from '../entities/User';
 import { createRideSchema } from './validation/Schemas';
 import { JoiValidation } from './validation/Validation';
 
@@ -17,21 +18,26 @@ export async function createRide(req: Request, res: Response): Promise<Response>
     return res.status(400).json({ error: 'passenger and driver cannot be the same user' });
   }
 
-  const [passenger, driver] = await Promise.all([
+  const [passengerDb, driverDb] = await Promise.all([
     userModel.findByUsername(body.passenger_username),
     userModel.findByUsername(body.driver_username),
   ]);
 
-  if (!passenger) {
+  if (!passengerDb) {
     return res.status(400).json({ error: 'passenger not found' });
   }
 
-  if (!driver) {
+  if (!driverDb) {
     return res.status(400).json({ error: 'driver not found' });
   }
 
-  await rideModel.create(passenger, driver, body.from_coordinates, body.to_coordinates, body.price);
+  await rideModel.create(passengerDb, driverDb, body.from_coordinates, body.to_coordinates, body.price);
 
-  console.log(`ride created | Passenger: ${passenger.username} | Driver: ${driver.username}`);
+  const passenger = new User(passengerDb);
+  const driver = new User(driverDb);
+
+  await Promise.all([passenger.setWallet(), driver.setWallet()]);
+
+  console.log(`ride created | Passenger: ${passengerDb.username} | Driver: ${driverDb.username}`);
   return res.status(200).json({ message: 'ride started' });
 }

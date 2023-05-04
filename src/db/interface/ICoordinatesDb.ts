@@ -1,4 +1,4 @@
-export interface ICoordinates {
+export interface ICoordinatesDb {
   latitude: string;
   longitude: string;
 }

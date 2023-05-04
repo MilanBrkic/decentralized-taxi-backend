@@ -1,6 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
-import { ICoordinates } from '../../entities/Coordinates';
-import { IUser } from '../../entities/User';
+import { ICoordinatesDb } from '../interface/ICoordinatesDb';
+import { IUserDb } from '../interface/IUserDb';
 import { RideStatus } from '../../enums/RideStatus';
 import { coordinateModelSchema } from './CoordinateModel';
 import { userSchema } from './UserModel';
@@ -23,10 +23,10 @@ class RideModel {
   }
 
   public async create(
-    passenger: IUser,
-    driver: IUser,
-    fromCoordinates: ICoordinates,
-    toCoordinates: ICoordinates,
+    passenger: IUserDb,
+    driver: IUserDb,
+    fromCoordinates: ICoordinatesDb,
+    toCoordinates: ICoordinatesDb,
     price: number
   ): Promise<any | null> {
     return this.model.create({

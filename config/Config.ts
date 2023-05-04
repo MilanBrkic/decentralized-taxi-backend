@@ -12,6 +12,8 @@ export default class Config {
   public static readonly ALGO_INDEXER_PORT = process.env.ALGO_INDEXER_PORT ?? '8980';
   public static readonly ALGO_PORT = process.env.ALGO_PORT ?? '52818';
   public static readonly ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+  public static readonly ADMIN_SECRET = process.env.ADMIN_SECRET;
+  public static readonly ALGORAND_PROVIDER_NAME = process.env.ALGORAND_PROVIDER_NAME ?? 'TestNet';
 }
 
 export const algorandConfig = {

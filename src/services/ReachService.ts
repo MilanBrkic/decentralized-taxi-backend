@@ -1,15 +1,26 @@
 import { loadStdlib } from '@reach-sh/stdlib';
 import { Stdlib_User } from '@reach-sh/stdlib/dist/types/interfaces';
 import { IAccount } from '@reach-sh/stdlib/dist/types/shared_impl';
-import { algorandConfig } from '../../config/Config';
+import Config, { algorandConfig } from '../../config/Config';
 const stdlib = loadStdlib(algorandConfig);
+// const backend = require('../smart-contract/index.main.mjs');
 
 export class ReachService {
   stdlib!: Stdlib_User<any, any, any, any, any, any, any, any, any, any, any>;
-  constructor() {
-    this.stdlib = stdlib;
+  adminAccount!: IAccount<any, any, any, any, any>;
+  constructor() {}
 
-    this.stdlib.setProviderByName('TestNet');
+  async init(): Promise<void> {
+    if (!Config.ADMIN_SECRET) {
+      throw Error('ADMIN_SECRET is not set');
+    }
+
+    this.stdlib = stdlib;
+    this.stdlib.setProviderByName(Config.ALGORAND_PROVIDER_NAME);
+    this.adminAccount = await this.stdlib.newAccountFromMnemonic(Config.ADMIN_SECRET);
+
+    console.log('Admin account created', this.adminAccount.networkAccount.addr);
+    console.log('Reach initialized...');
   }
 
   async newAccountFromMnemonic(secret: string): Promise<IAccount<any, any, any, any, any>> {
@@ -17,11 +28,6 @@ export class ReachService {
 
     return account;
   }
-
-  async getBalance(): Promise<void> {
-    const address = 'C4DAVW7MVUAFF4HUAD6D7PJQVKCILU4VH7LSPZJ5R363QAHZZIK4P7FFMU';
-
-    const balance = await this.stdlib.balanceOf(address);
-    console.log('balance', balance);
-  }
 }
+
+export const reach = new ReachService();

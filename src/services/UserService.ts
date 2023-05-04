@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
-import { reach } from '..';
 import userModel from '../db/model/UserModel';
 import { JoiValidation } from './validation/Validation';
 import { addWalletSchema, loginSchema, registerSchema } from './validation/Schemas';
 import { encryptService } from './EncryptService';
+import { reach } from './ReachService';
 
 export async function register(req: Request, res: Response): Promise<Response> {
   const body = req.body;
