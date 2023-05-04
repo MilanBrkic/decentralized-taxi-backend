@@ -1,13 +1,15 @@
 import { IUserDb } from '../db/interface/IUserDb';
 import { encryptService } from '../services/EncryptService';
 import { reach } from '../services/ReachService';
+import { IAccount } from '@reach-sh/stdlib/dist/types/shared_impl';
+
 export class User implements IUserDb {
   username: string;
   phoneNumber: string;
   password: string;
   address: string;
   encryptedMnemonic: string;
-  wallet: any;
+  wallet!: IAccount<any, any, any, any, any>;
   constructor(db: IUserDb) {
     this.username = db.username;
     this.phoneNumber = db.phoneNumber;

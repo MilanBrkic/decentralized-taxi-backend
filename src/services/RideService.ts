@@ -4,6 +4,7 @@ import userModel from '../db/model/UserModel';
 import { User } from '../entities/User';
 import { createRideSchema } from './validation/Schemas';
 import { JoiValidation } from './validation/Validation';
+import { reach } from './ReachService';
 
 export async function createRide(req: Request, res: Response): Promise<Response> {
   const body = req.body;
@@ -37,6 +38,8 @@ export async function createRide(req: Request, res: Response): Promise<Response>
   const driver = new User(driverDb);
 
   await Promise.all([passenger.setWallet(), driver.setWallet()]);
+
+  await reach.launchRide(passenger, driver, body.price);
 
   console.log(`ride created | Passenger: ${passengerDb.username} | Driver: ${driverDb.username}`);
   return res.status(200).json({ message: 'ride started' });

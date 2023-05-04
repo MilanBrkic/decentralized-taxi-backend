@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import Config from '../../config/Config';
+import Config from '../config/Config';
 export class EncryptService {
   private secret = Config.ENCRYPTION_KEY;
   private algorithm;

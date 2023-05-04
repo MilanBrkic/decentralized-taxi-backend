@@ -1,5 +1,5 @@
 import mongoose, { Mongoose } from 'mongoose';
-import Config from '../../config/Config';
+import Config from '../config/Config';
 
 class MongooseDatabase {
   public mongoose!: Mongoose;

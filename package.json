@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "start:debug": "node --inspect-brk -r ts-node/register ./src/index.ts",
-    "start": "tsc && export NODE_ENV=development&& node ./build/src/index.js",
+    "start": "tsc && export NODE_ENV=development&& node --experimental-modules ./build/index.js",
     "start-nodemon": "nodemon --ext 'ts,json' --exec npm start",
     "build": "tsc",
     "dev": "node build/index.js"

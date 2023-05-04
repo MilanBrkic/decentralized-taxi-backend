@@ -14,6 +14,10 @@ export default class Config {
   public static readonly ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
   public static readonly ADMIN_SECRET = process.env.ADMIN_SECRET;
   public static readonly ALGORAND_PROVIDER_NAME = process.env.ALGORAND_PROVIDER_NAME ?? 'TestNet';
+  public static readonly FEE_PERCENTAGE = process.env.FEE_PERCENTAGE ? Number(process.env.FEE_PERCENTAGE) : 2;
+  public static readonly DEPOSIT_PERCENTAGE = process.env.DEPOSIT_PERCENTAGE
+    ? Number(process.env.DEPOSIT_PERCENTAGE)
+    : 30;
 }
 
 export const algorandConfig = {
