@@ -2,8 +2,8 @@ import { loadStdlib } from '@reach-sh/stdlib';
 import { Stdlib_User } from '@reach-sh/stdlib/dist/types/interfaces';
 import { IAccount } from '@reach-sh/stdlib/dist/types/shared_impl';
 import Config, { algorandConfig } from '../../config/Config';
+
 const stdlib = loadStdlib(algorandConfig);
-// const backend = require('../smart-contract/index.main.mjs');
 
 export class ReachService {
   stdlib!: Stdlib_User<any, any, any, any, any, any, any, any, any, any, any>;
