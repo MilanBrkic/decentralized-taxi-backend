@@ -1,7 +1,7 @@
-import { mongoDb } from './db/MongoDb';
+import { mongooseDb } from './db';
 import { initHttpServer } from './rest';
 import { ReachService } from './services/ReachService';
 
 export const reach = new ReachService();
 initHttpServer();
-mongoDb.connect();
+mongooseDb.connect();

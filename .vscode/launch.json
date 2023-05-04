@@ -1,15 +1,17 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Debug TypeScript",
       "type": "node",
-      "request": "attach",
-      "name": "Attach to Process",
-      "processId": "${command:PickProcess}",
-      "port": 9229
+      "request": "launch",
+      "program": "${workspaceFolder}/build/src/index.js",
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/build/**/*.js"],
+      "preLaunchTask": "tsc: build - tsconfig.json",
+      "env": {
+        "NODE_ENV": "development"
+      }
     }
   ]
 }

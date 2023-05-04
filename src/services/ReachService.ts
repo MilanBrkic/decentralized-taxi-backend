@@ -1,7 +1,7 @@
 import { loadStdlib } from '@reach-sh/stdlib';
 import { Stdlib_User } from '@reach-sh/stdlib/dist/types/interfaces';
 import { IAccount } from '@reach-sh/stdlib/dist/types/shared_impl';
-import { algorandConfig } from '../../config/AlgorandConfig';
+import { algorandConfig } from '../../config/Config';
 const stdlib = loadStdlib(algorandConfig);
 
 export class ReachService {
@@ -12,10 +12,10 @@ export class ReachService {
     this.stdlib.setProviderByName('TestNet');
   }
 
-  async newAccountFromMnemonic(secret: string): Promise<void> {
+  async newAccountFromMnemonic(secret: string): Promise<string> {
     const account: IAccount<any, any, any, any, any> = await this.stdlib.newAccountFromMnemonic(secret);
 
-    console.log('address', account.networkAccount.addr);
+    return account.networkAccount.addr;
   }
 
   async getBalance(): Promise<void> {
