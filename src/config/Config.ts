@@ -18,6 +18,13 @@ export default class Config {
   public static readonly DEPOSIT_PERCENTAGE = process.env.DEPOSIT_PERCENTAGE
     ? Number(process.env.DEPOSIT_PERCENTAGE)
     : 30;
+  public static readonly RIDE_START_TIMEOUT = process.env.RIDE_START_TIMEOUT
+    ? Number(process.env.RIDE_START_TIMEOUT)
+    : 2 * 60 * 1000;
+
+  public static readonly RIDE_END_TIMEOUT = process.env.RIDE_END_TIMEOUT
+    ? Number(process.env.RIDE_END_TIMEOUT)
+    : 30 * 1000;
 }
 
 export const algorandConfig = {

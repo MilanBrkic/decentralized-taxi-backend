@@ -53,6 +53,11 @@ class RideModel {
   public async updateContractInfo(rideId: string, contractInfo: ReachContractInfo): Promise<void> {
     await this.model.updateOne({ _id: rideId }, { contractInfo, updatedAt: new Date() }).exec();
   }
+
+  public async findById(rideId: string): Promise<IRideDb> {
+    const ride = await this.model.findById(rideId).exec();
+    return ride as unknown as IRideDb;
+  }
 }
 
 const rideModel = new RideModel();

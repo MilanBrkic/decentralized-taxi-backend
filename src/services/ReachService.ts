@@ -1,6 +1,7 @@
 import { loadStdlib } from '@reach-sh/stdlib';
 import { IAccount } from '@reach-sh/stdlib/dist/types/shared_impl';
 import Config, { algorandConfig } from '../config/Config';
+import { IUserDb } from '../db/interface/IUserDb';
 import rideModel from '../db/model/RideModel';
 import { User } from '../entities/User';
 import { RideStatus } from '../enums/RideStatus';
@@ -28,7 +29,30 @@ export class ReachService {
     console.log('Reach initialized...');
   }
 
-  setUpEvents(contract: ReachContract): void {}
+  setUpEvents(
+    contract: ReachContract,
+    passenger: User,
+    driver: User,
+    rideId: string,
+    contractInfo: Promise<any>
+  ): void {
+    contract.events.rideStarted.monitor(async (event: ReachEvent) => {
+      console.log(
+        `Ride has started | RideId: ${rideId} | Passenger: ${passenger.username} | Driver: ${driver.username}`
+      );
+
+      await rideModel.updateStatus(rideId, RideStatus.Started);
+      setTimeout(async () => {
+        try {
+          await reach.adminInterfereEnd(rideId, true, true);
+          await rideModel.updateStatus(rideId, RideStatus.BeforeEndTimeout);
+          console.log(`Admin interfered and ended the ride before it's timeout | RideId: ${rideId}`);
+        } catch (error) {
+          console.log(`Admin tried to interfere but the ride end has already ended | RideId: ${rideId}`, error);
+        }
+      }, Config.RIDE_END_TIMEOUT);
+    });
+  }
 
   setAdminInteract() {
     this.adminInteract = {
@@ -41,19 +65,40 @@ export class ReachService {
     };
   }
 
-  public async adminInterfereStart(account: ReachAccount, contractInfo: any) {
-    const contract = account.contract(backend, contractInfo);
-    await contract.a.Ride.start();
-  }
-
   async newAccountFromMnemonic(secret: string): Promise<IAccount<any, any, any, any, any>> {
     const account: IAccount<any, any, any, any, any> = await this.stdlib.newAccountFromMnemonic(secret);
 
     return account;
   }
 
+  async startRide(userDb: IUserDb, contractInfo: ReachContractInfo): Promise<void> {
+    const user = new User(userDb);
+    await user.setWallet();
+    const contract = user.wallet.contract(backend, Number(contractInfo._hex) as any);
+    await contract.a.Ride.start();
+  }
+
+  async adminInterfereStart(contractInfo: any) {
+    const contract = this.adminAccount.contract(backend, contractInfo);
+    await contract.a.Ride.start();
+  }
+
+  async adminInterfereEnd(rideId: string, wasPassengerAtLocation: boolean, wasDriverAtLocation: boolean) {
+    const ride = await rideModel.findById(rideId);
+    if (!ride) {
+      throw Error(`Ride not found | RideId: ${rideId}`);
+    }
+
+    if (!ride.contractInfo) {
+      throw Error(`Contract info not found | RideId: ${rideId}`);
+    }
+
+    const contract = this.adminAccount.contract(backend, Number(ride.contractInfo._hex) as any);
+    await contract.a.Ride.adminInterfereEnd(wasPassengerAtLocation, wasDriverAtLocation);
+  }
+
   async launchRide(passenger: User, driver: User, price: number, rideId: string): Promise<ReachContractInfo> {
-    const adminContract: ReachContract = reach.adminAccount.contract(backend);
+    const adminContract: ReachContract = this.adminAccount.contract(backend);
     const contractInfo = adminContract.getInfo();
     const passengerContract = passenger.wallet.contract(backend, contractInfo);
     const driverContract = driver.wallet.contract(backend, contractInfo);
@@ -81,6 +126,8 @@ export class ReachService {
       throw 666;
     };
 
+    this.setUpEvents(adminContract, passenger, driver, rideId, contractInfo);
+
     try {
       await Promise.all([
         adminContract.participants.Admin(this.adminInteract),
@@ -95,15 +142,15 @@ export class ReachService {
 
     setTimeout(
       () =>
-        this.adminInterfereStart(reach.adminAccount, contractInfo)
+        this.adminInterfereStart(contractInfo)
           .then(async () => {
             await rideModel.updateStatus(rideId, RideStatus.BeforeStartTimeout);
             console.log(`Admin interfered on ride start | RideId: ${rideId}`);
           })
           .catch((error) => {
-            console.log("Admin tried to interfere but it's too late", error);
+            console.log(`Admin tried to interfere but the ride has already started | RideId: ${rideId}`, error);
           }),
-      10 * 1000
+      Config.RIDE_START_TIMEOUT
     );
 
     return contractInfo;
