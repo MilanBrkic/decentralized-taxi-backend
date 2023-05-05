@@ -8,6 +8,7 @@ import { User } from '../entities/User';
 import { RideStatus } from '../enums/RideStatus';
 import * as backend from '../smart-contracts/index.main';
 import { ReachAccount, ReachContract, ReachContractInfo, ReachEvent, ReachStdlib } from '../types/ReachTypes';
+import { Sleep } from '../utilities/Sleep';
 
 export class Reach {
   stdlib!: ReachStdlib;
@@ -69,6 +70,8 @@ export class Reach {
     });
 
     contract.events.rideEnded.monitor(async (event: ReachEvent) => {
+      await Sleep.seconds(2);
+
       const { what } = event;
       const paymentToPassenger = what[0];
       const paymentToDriver = what[1];
