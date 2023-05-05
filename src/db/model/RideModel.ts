@@ -6,16 +6,22 @@ import { coordinateModelSchema } from './CoordinateModel';
 import { userSchema } from './UserModel';
 import { IRideDb } from '../interface/IRideDb';
 import { ReachContractInfo } from '../../types/ReachTypes';
+import { defaultUserStats, userStatsModelSchema } from './UserStatsModel';
 
 const rideSchema = new Schema({
   passenger: userSchema,
+  passengerStats: {
+    type: userStatsModelSchema,
+    default: defaultUserStats,
+  },
   driver: userSchema,
+  driverStats: { type: userStatsModelSchema, default: defaultUserStats },
   fromCoordinates: coordinateModelSchema,
   toCoordinates: coordinateModelSchema,
   price: Number,
-  status: String,
-  createdAt: Date,
-  updatedAt: Date,
+  status: { type: String, default: RideStatus.Created },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
   contractInfo: Object,
 });
 
@@ -38,9 +44,6 @@ class RideModel {
       fromCoordinates,
       toCoordinates,
       price,
-      status: RideStatus.Created,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     });
 
     return ride as unknown as IRideDb;

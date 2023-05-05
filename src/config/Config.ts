@@ -20,11 +20,16 @@ export default class Config {
     : 30;
   public static readonly RIDE_START_TIMEOUT = process.env.RIDE_START_TIMEOUT
     ? Number(process.env.RIDE_START_TIMEOUT)
-    : 2 * 60 * 1000;
+    : 4 * 60 * 1000;
+
+  public static readonly RIDE_START_WAITING_FOR_OTHER_PASSENGER_TIMEOUT = process.env
+    .RIDE_START_WAITING_FOR_OTHER_PASSENGER_TIMEOUT
+    ? Number(process.env.RIDE_START_WAITING_FOR_OTHER_PASSENGER_TIMEOUT)
+    : 30 * 1000;
 
   public static readonly RIDE_END_TIMEOUT = process.env.RIDE_END_TIMEOUT
     ? Number(process.env.RIDE_END_TIMEOUT)
-    : 30 * 1000;
+    : 10 * 1000;
 }
 
 export const algorandConfig = {

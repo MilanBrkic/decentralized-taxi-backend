@@ -1,5 +1,6 @@
 import { loadStdlib } from '@reach-sh/stdlib';
 import { IAccount } from '@reach-sh/stdlib/dist/types/shared_impl';
+import { isPromise } from 'util/types';
 import Config, { algorandConfig } from '../config/Config';
 import { IUserDb } from '../db/interface/IUserDb';
 import rideModel from '../db/model/RideModel';
@@ -8,7 +9,7 @@ import { RideStatus } from '../enums/RideStatus';
 import * as backend from '../smart-contracts/index.main';
 import { ReachAccount, ReachContract, ReachContractInfo, ReachEvent, ReachStdlib } from '../types/ReachTypes';
 
-export class ReachService {
+export class Reach {
   stdlib!: ReachStdlib;
   adminAccount!: ReachAccount;
   adminInteract!: any;
@@ -29,13 +30,18 @@ export class ReachService {
     console.log('Reach initialized...');
   }
 
-  setUpEvents(
-    contract: ReachContract,
-    passenger: User,
-    driver: User,
-    rideId: string,
-    contractInfo: Promise<any>
-  ): void {
+  setAdminInteract() {
+    this.adminInteract = {
+      ...this.stdlib.hasConsoleLogger,
+      feePercentage: Config.FEE_PERCENTAGE,
+      depositPercentage: Config.DEPOSIT_PERCENTAGE,
+      ready: () => {
+        throw 666;
+      },
+    };
+  }
+
+  setUpEvents(contract: ReachContract, passenger: User, driver: User, rideId: string): void {
     contract.events.rideStarted.monitor(async (event: ReachEvent) => {
       console.log(
         `Ride has started | RideId: ${rideId} | Passenger: ${passenger.username} | Driver: ${driver.username}`
@@ -54,17 +60,6 @@ export class ReachService {
     });
   }
 
-  setAdminInteract() {
-    this.adminInteract = {
-      ...this.stdlib.hasConsoleLogger,
-      feePercentage: Config.FEE_PERCENTAGE,
-      depositPercentage: Config.DEPOSIT_PERCENTAGE,
-      ready: () => {
-        throw 666;
-      },
-    };
-  }
-
   async newAccountFromMnemonic(secret: string): Promise<IAccount<any, any, any, any, any>> {
     const account: IAccount<any, any, any, any, any> = await this.stdlib.newAccountFromMnemonic(secret);
 
@@ -79,8 +74,30 @@ export class ReachService {
   }
 
   async adminInterfereStart(contractInfo: any) {
-    const contract = this.adminAccount.contract(backend, contractInfo);
+    let contract;
+    if (isPromise(contractInfo)) {
+      contract = this.adminAccount.contract(backend, contractInfo);
+    } else {
+      contract = this.adminAccount.contract(backend, Number(contractInfo._hex) as any);
+    }
+
     await contract.a.Ride.start();
+  }
+
+  timeOutedAdminInterfereStart(contractInfo: any, rideId: string, timeout: number) {
+    console.log(`adminInterfereStart will be called in ${timeout / 1000}s | RideId: ${rideId}`);
+    setTimeout(
+      () =>
+        this.adminInterfereStart(contractInfo)
+          .then(async () => {
+            await rideModel.updateStatus(rideId, RideStatus.BeforeStartTimeout);
+            console.log(`Admin interfered on ride start | RideId: ${rideId}`);
+          })
+          .catch((error) => {
+            console.log(`Admin tried to interfere but the ride has already started | RideId: ${rideId}`, error);
+          }),
+      timeout
+    );
   }
 
   async adminInterfereEnd(rideId: string, wasPassengerAtLocation: boolean, wasDriverAtLocation: boolean) {
@@ -126,7 +143,7 @@ export class ReachService {
       throw 666;
     };
 
-    this.setUpEvents(adminContract, passenger, driver, rideId, contractInfo);
+    this.setUpEvents(adminContract, passenger, driver, rideId);
 
     try {
       await Promise.all([
@@ -140,21 +157,10 @@ export class ReachService {
       }
     }
 
-    setTimeout(
-      () =>
-        this.adminInterfereStart(contractInfo)
-          .then(async () => {
-            await rideModel.updateStatus(rideId, RideStatus.BeforeStartTimeout);
-            console.log(`Admin interfered on ride start | RideId: ${rideId}`);
-          })
-          .catch((error) => {
-            console.log(`Admin tried to interfere but the ride has already started | RideId: ${rideId}`, error);
-          }),
-      Config.RIDE_START_TIMEOUT
-    );
+    this.timeOutedAdminInterfereStart(contractInfo, rideId, Config.RIDE_START_TIMEOUT);
 
     return contractInfo;
   }
 }
 
-export const reach = new ReachService();
+export const reach = new Reach();

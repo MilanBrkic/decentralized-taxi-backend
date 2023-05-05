@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import rideModel from '../db/model/RideModel';
 import userModel from '../db/model/UserModel';
-import { User } from '../entities/User';
 import { createRideSchema } from './validation/Schemas';
 import { JoiValidation } from './validation/Validation';
-import { reach } from './ReachService';
+import { reach } from './Reach';
 import { RideStatus } from '../enums/RideStatus';
 import Config from '../config/Config';
+import { User } from '../entities/User';
 
 export async function createRide(req: Request, res: Response): Promise<Response> {
   const body = req.body;
@@ -78,12 +78,15 @@ export async function startRide(req: Request, res: Response): Promise<Response> 
     return res.status(400).json({ error: 'ride not found' });
   }
 
-  const user =
-    ride.passenger.username === body.username
-      ? ride.passenger
-      : ride.driver.username === body.username
-      ? ride.driver
-      : null;
+  let isPassenger = false;
+  let user;
+  if (ride.passenger.username === body.username) {
+    user = ride.passenger;
+    isPassenger = true;
+  } else if (ride.driver.username === body.username) {
+    user = ride.driver;
+    isPassenger = false;
+  }
 
   if (!user) {
     return res.status(400).json({ error: 'user not found' });
@@ -100,5 +103,17 @@ export async function startRide(req: Request, res: Response): Promise<Response> 
     return res.status(500).json({ error: error.message });
   }
 
-  return res.status(200).json({ message: 'ride started for' });
+  isPassenger ? (ride.passengerStats.started = true) : (ride.driverStats.started = true);
+
+  await (ride as any).save();
+
+  if (!ride.passengerStats.started || !ride.driverStats.started) {
+    reach.timeOutedAdminInterfereStart(
+      ride.contractInfo,
+      ride._id,
+      Config.RIDE_START_WAITING_FOR_OTHER_PASSENGER_TIMEOUT
+    );
+  }
+
+  return res.status(200).json({ message: `ride started for ${user.username}` });
 }

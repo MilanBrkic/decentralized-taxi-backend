@@ -1,6 +1,6 @@
 import { IUserDb } from '../db/interface/IUserDb';
 import { encryptService } from '../services/EncryptService';
-import { reach } from '../services/ReachService';
+import { reach } from '../services/Reach';
 import { IAccount } from '@reach-sh/stdlib/dist/types/shared_impl';
 
 export class User implements IUserDb {
