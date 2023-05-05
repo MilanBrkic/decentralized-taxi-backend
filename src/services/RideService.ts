@@ -115,5 +115,59 @@ export async function startRide(req: Request, res: Response): Promise<Response> 
     );
   }
 
+  console.log(`ride started | RideId: ${ride._id} | User: ${user.username} | IsPassenger: ${isPassenger}`);
+
   return res.status(200).json({ message: `ride started for ${user.username}` });
+}
+
+export async function endRide(req: Request, res: Response): Promise<Response> {
+  const body = req.body;
+  const params = req.params;
+
+  if (!params.id) {
+    return res.status(400).json({ error: 'id is required' });
+  }
+
+  if (!body.username) {
+    return res.status(400).json({ error: 'username is required' });
+  }
+
+  const ride = await rideModel.findById(params.id);
+
+  if (!ride) {
+    return res.status(400).json({ error: 'ride not found' });
+  }
+
+  let isPassenger = false;
+  let user;
+  if (ride.passenger.username === body.username) {
+    user = ride.passenger;
+    isPassenger = true;
+  } else if (ride.driver.username === body.username) {
+    user = ride.driver;
+    isPassenger = false;
+  }
+
+  if (!user) {
+    return res.status(400).json({ error: 'user not found' });
+  }
+
+  if (!ride.contractInfo || ride.status !== RideStatus.Started) {
+    return res.status(400).json({ error: 'ride not started' });
+  }
+
+  try {
+    await reach.endRide(user, ride.contractInfo);
+  } catch (error: any) {
+    console.log(`could not end ride | RideId: ${ride._id} | Error: ${error.stack}`);
+    return res.status(500).json({ error: error.message });
+  }
+
+  isPassenger ? (ride.passengerStats.ended = true) : (ride.driverStats.ended = true);
+
+  await (ride as any).save();
+
+  console.log(`ride ended | RideId: ${ride._id} | User: ${user.username} | IsPassenger: ${isPassenger}`);
+
+  return res.status(200).json({ message: `ride ended for ${user.username}` });
 }

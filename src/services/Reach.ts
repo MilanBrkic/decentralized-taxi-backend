@@ -63,8 +63,10 @@ export class Reach {
           await reach.adminInterfereEnd(rideId, true, true);
           await rideModel.updateStatus(rideId, RideStatus.BeforeEndTimeout);
           console.log(`Admin interfered and ended the ride before | RideId: ${rideId}`);
-        } catch (error) {
-          console.log(`Admin tried to interfere but the ride end has already ended | RideId: ${rideId}`, error);
+        } catch (error: any) {
+          if (!error.message.includes('getCurrentStep_') && !error.message.includes('Expected the DApp')) {
+            console.log(`Error when calling adminInterfereEnd | RideId: ${rideId}`, error.message);
+          }
         }
       }, Config.RIDE_END_TIMEOUT);
     });
@@ -99,7 +101,9 @@ export class Reach {
       await (ride as any).save();
 
       console.log(
-        `Ride has ended | RideId: ${rideId} | Status: ${ride.status} | passengerNet: ${passengerNet} | driverNet: ${driverNet}  | adminNet: ${adminNet}`
+        `Ride has ended | RideId: ${rideId} | Status: ${ride.status} | ${ride.passenger.username}-passengerNet: ${
+          passengerNet / 1000000
+        } ALGO | ${ride.driver.username}-driverNet: ${driverNet / 1000000} ALGO | adminNet: ${adminNet / 1000000} ALGO`
       );
     });
   }
@@ -115,6 +119,13 @@ export class Reach {
     await user.setWallet();
     const contract = user.wallet.contract(backend, Number(contractInfo._hex) as any);
     await contract.a.Ride.start();
+  }
+
+  async endRide(userDb: IUserDb, contractInfo: ReachContractInfo): Promise<void> {
+    const user = new User(userDb);
+    await user.setWallet();
+    const contract = user.wallet.contract(backend, Number(contractInfo._hex) as any);
+    await contract.a.Ride.end();
   }
 
   async adminInterfereStart(contractInfo: any) {
@@ -135,8 +146,10 @@ export class Reach {
         await this.adminInterfereStart(contractInfo);
         await rideModel.updateStatus(rideId, RideStatus.BeforeStartTimeout);
         console.log(`Admin interfered on ride start | RideId: ${rideId}`);
-      } catch (error) {
-        console.log(`Admin tried to interfere but the ride has already started | RideId: ${rideId}`, error);
+      } catch (error: any) {
+        if (!error.message.includes('getCurrentStep_') && !error.message.includes('Expected the DApp')) {
+          console.log(`Error when calling adminInterfereStart | RideId: ${rideId}`, error.message);
+        }
       }
     }, timeout);
   }
