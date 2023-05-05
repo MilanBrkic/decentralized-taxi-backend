@@ -1,6 +1,7 @@
 import { RideStatus } from '../../enums/RideStatus';
 import { ReachContractInfo } from '../../types/ReachTypes';
 import { ICoordinatesDb } from './ICoordinatesDb';
+import { IPaymentInfoDb } from './IPaymentInfoDb';
 import { IUserDb } from './IUserDb';
 import { IUserStatsDb } from './IUserStatsDb';
 
@@ -16,5 +17,6 @@ export interface IRideDb {
   status: RideStatus;
   createdAt: Date;
   updatedAt: Date;
+  paymentInfo: IPaymentInfoDb;
   contractInfo: ReachContractInfo;
 }

@@ -41,22 +41,63 @@ export class Reach {
     };
   }
 
-  setUpEvents(contract: ReachContract, passenger: User, driver: User, rideId: string): void {
+  setUpEvents(
+    contract: ReachContract,
+    passenger: User,
+    driver: User,
+    rideId: string,
+    price: number,
+    depositPercentage: number
+  ): void {
     contract.events.rideStarted.monitor(async (event: ReachEvent) => {
       console.log(
         `Ride has started | RideId: ${rideId} | Passenger: ${passenger.username} | Driver: ${driver.username}`
       );
 
       await rideModel.updateStatus(rideId, RideStatus.Started);
+
+      console.log(`adminInterfereStart will be called in ${Config.RIDE_END_TIMEOUT / 1000}s | RideId: ${rideId}`);
       setTimeout(async () => {
         try {
           await reach.adminInterfereEnd(rideId, true, true);
           await rideModel.updateStatus(rideId, RideStatus.BeforeEndTimeout);
-          console.log(`Admin interfered and ended the ride before it's timeout | RideId: ${rideId}`);
+          console.log(`Admin interfered and ended the ride before | RideId: ${rideId}`);
         } catch (error) {
           console.log(`Admin tried to interfere but the ride end has already ended | RideId: ${rideId}`, error);
         }
       }, Config.RIDE_END_TIMEOUT);
+    });
+
+    contract.events.rideEnded.monitor(async (event: ReachEvent) => {
+      const { what } = event;
+      const paymentToPassenger = what[0];
+      const paymentToDriver = what[1];
+      const paymentToAdmin = what[2];
+
+      const deposit = price * (depositPercentage / 100);
+      const passengerHasPaid = price + deposit;
+      const driverHasPaid = deposit;
+
+      const passengerNet = paymentToPassenger - passengerHasPaid;
+      const driverNet = paymentToDriver - driverHasPaid;
+      const adminNet = paymentToAdmin;
+
+      const ride = await rideModel.findById(rideId);
+      if (ride.status === RideStatus.Started) {
+        ride.status = RideStatus.Ended;
+      }
+
+      ride.paymentInfo = {
+        passengerNet,
+        driverNet,
+        adminNet,
+      };
+
+      await (ride as any).save();
+
+      console.log(
+        `Ride has ended | RideId: ${rideId} | Status: ${ride.status} | passengerNet: ${passengerNet} | driverNet: ${driverNet}  | adminNet: ${adminNet}`
+      );
     });
   }
 
@@ -86,18 +127,15 @@ export class Reach {
 
   timeOutedAdminInterfereStart(contractInfo: any, rideId: string, timeout: number) {
     console.log(`adminInterfereStart will be called in ${timeout / 1000}s | RideId: ${rideId}`);
-    setTimeout(
-      () =>
-        this.adminInterfereStart(contractInfo)
-          .then(async () => {
-            await rideModel.updateStatus(rideId, RideStatus.BeforeStartTimeout);
-            console.log(`Admin interfered on ride start | RideId: ${rideId}`);
-          })
-          .catch((error) => {
-            console.log(`Admin tried to interfere but the ride has already started | RideId: ${rideId}`, error);
-          }),
-      timeout
-    );
+    setTimeout(async () => {
+      try {
+        await this.adminInterfereStart(contractInfo);
+        await rideModel.updateStatus(rideId, RideStatus.BeforeStartTimeout);
+        console.log(`Admin interfered on ride start | RideId: ${rideId}`);
+      } catch (error) {
+        console.log(`Admin tried to interfere but the ride has already started | RideId: ${rideId}`, error);
+      }
+    }, timeout);
   }
 
   async adminInterfereEnd(rideId: string, wasPassengerAtLocation: boolean, wasDriverAtLocation: boolean) {
@@ -143,7 +181,7 @@ export class Reach {
       throw 666;
     };
 
-    this.setUpEvents(adminContract, passenger, driver, rideId);
+    this.setUpEvents(adminContract, passenger, driver, rideId, price, this.adminInteract.depositPercentage);
 
     try {
       await Promise.all([

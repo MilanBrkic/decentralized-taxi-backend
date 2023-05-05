@@ -7,6 +7,7 @@ import { userSchema } from './UserModel';
 import { IRideDb } from '../interface/IRideDb';
 import { ReachContractInfo } from '../../types/ReachTypes';
 import { defaultUserStats, userStatsModelSchema } from './UserStatsModel';
+import { paymentInfoModelSchema } from './PaymentInfoModel';
 
 const rideSchema = new Schema({
   passenger: userSchema,
@@ -22,6 +23,7 @@ const rideSchema = new Schema({
   status: { type: String, default: RideStatus.Created },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+  paymentInfo: paymentInfoModelSchema,
   contractInfo: Object,
 });
 
