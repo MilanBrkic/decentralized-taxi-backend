@@ -17,16 +17,17 @@ export async function register(req: Request, res: Response): Promise<Response> {
 
   const user = await userModel.findByUsername(body.username);
   if (user) {
-    return res.status(400).json({ error: 'username already taken' });
+    return res.status(400).json({ message: 'username already taken' });
   } else {
     const phoneNumber = body.phone_number.replace(/[-_\s,]/g, '');
     const userByPhone = await userModel.findByPhoneNumber(phoneNumber);
     if (userByPhone) {
-      return res.status(400).json({ error: 'phone number already taken' });
+      return res.status(400).json({ message: 'phone number already taken' });
     } else {
       const encryptedPassword = encryptService.hash(body.password);
-      await userModel.insert(body.username, encryptedPassword, phoneNumber);
-      return res.status(200).json({ message: 'user created' });
+      const registeredUser = await userModel.insert(body.username, encryptedPassword, phoneNumber);
+      console.log(`User registered ${registeredUser.username} ${registeredUser.phoneNumber}`);
+      return res.status(200).json(registeredUser);
     }
   }
 }
@@ -42,14 +43,14 @@ export async function login(req: Request, res: Response): Promise<Response> {
 
   const user = await userModel.findByUsername(body.username);
   if (!user) {
-    return res.status(400).json({ error: 'user not found' });
+    return res.status(400).json({ message: 'user not found' });
   } else {
     const encryptedPassword = encryptService.hash(body.password);
     if (user.password !== encryptedPassword) {
-      return res.status(400).json({ error: 'wrong password' });
+      return res.status(400).json({ message: 'wrong password' });
     } else {
-      const { phoneNumber, username } = user;
-      return res.status(200).json({ phoneNumber, username });
+      const { encryptedMnemonic, password, ...rest } = user;
+      return res.status(200).json(rest);
     }
   }
 }

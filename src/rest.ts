@@ -1,12 +1,13 @@
 import express from 'express';
 import { createRide, endRide, startRide } from './services/RideService';
 import { addWallet, login, register } from './services/UserService';
-
+import cors from 'cors';
 export function initHttpServer() {
   const app = express();
   const port = 3000;
 
   app.use(express.json());
+  app.use(cors());
   app.get('/', (req, res) => {
     return res.status(200).json({ message: 'Hello World!' });
   });
