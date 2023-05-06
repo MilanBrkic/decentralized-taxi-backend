@@ -63,6 +63,15 @@ class RideModel {
     const ride = await this.model.findById(rideId).exec();
     return ride as unknown as IRideDb;
   }
+
+  public async findRidesByUsername(username: string): Promise<IRideDb[]> {
+    const rides = await this.model
+      .find({
+        $or: [{ 'passenger.username': username }, { 'driver.username': username }],
+      })
+      .exec();
+    return rides as unknown as IRideDb[];
+  }
 }
 
 const rideModel = new RideModel();

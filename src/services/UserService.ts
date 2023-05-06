@@ -5,6 +5,7 @@ import { JoiValidation } from './validation/Validation';
 import { addWalletSchema, loginSchema, registerSchema } from './validation/Schemas';
 import { encryptService } from './EncryptService';
 import { reach } from './Reach';
+import { User } from '../entities/User';
 
 export async function register(req: Request, res: Response): Promise<Response> {
   const body = req.body;
@@ -27,7 +28,11 @@ export async function register(req: Request, res: Response): Promise<Response> {
       const encryptedPassword = encryptService.hash(body.password);
       const registeredUser = await userModel.insert(body.username, encryptedPassword, phoneNumber);
       console.log(`User registered ${registeredUser.username} ${registeredUser.phoneNumber}`);
-      return res.status(200).json(registeredUser);
+      return res.status(200).json({
+        username: registeredUser.username,
+        phoneNumber: registeredUser.phoneNumber,
+        address: registeredUser.address,
+      });
     }
   }
 }
@@ -49,8 +54,19 @@ export async function login(req: Request, res: Response): Promise<Response> {
     if (user.password !== encryptedPassword) {
       return res.status(400).json({ message: 'wrong password' });
     } else {
-      const { encryptedMnemonic, password, ...rest } = user;
-      return res.status(200).json(rest);
+      const enricherUser = new User(user);
+      await enricherUser.setWallet();
+      await enricherUser.setBalance();
+      await enricherUser.setRides();
+
+      return res.status(200).json({
+        username: user.username,
+        phoneNumber: user.phoneNumber,
+        address: user.address,
+        balance: enricherUser.balance,
+        ridesAsDriver: enricherUser.ridesAsDriver,
+        ridesAsPassenger: enricherUser.ridesAsPassenger,
+      });
     }
   }
 }

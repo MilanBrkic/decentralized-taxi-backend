@@ -215,6 +215,15 @@ export class Reach {
 
     return contractInfo;
   }
+
+  async getBalance(wallet: ReachAccount): Promise<number> {
+    const balance = await this.stdlib.balanceOf(wallet);
+    return Number(balance._hex);
+  }
+
+  async getBalanceStandardUnit(wallet: ReachAccount): Promise<number> {
+    return (await this.getBalance(wallet)) / 1000000;
+  }
 }
 
 export const reach = new Reach();
