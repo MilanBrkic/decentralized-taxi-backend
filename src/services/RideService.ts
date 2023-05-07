@@ -8,7 +8,7 @@ import { RideStatus } from '../enums/RideStatus';
 import Config from '../config/Config';
 import { User } from '../entities/User';
 
-export async function createRide(req: Request, res: Response): Promise<Response> {
+export async function arrangeRide(req: Request, res: Response): Promise<Response> {
   const body = req.body;
 
   try {
@@ -170,4 +170,49 @@ export async function endRide(req: Request, res: Response): Promise<Response> {
   console.log(`ride ended | RideId: ${ride._id} | User: ${user.username} | IsPassenger: ${isPassenger}`);
 
   return res.status(200).json({ message: `ride ended for ${user.username}` });
+}
+
+export async function requestRideV2(req: Request, res: Response): Promise<Response> {
+  const body = req.body;
+
+  if (!body.username) {
+    return res.status(400).json({ message: 'username is required' });
+  }
+
+  const user = await userModel.findByUsername(body.username);
+
+  if (!user) {
+    return res.status(400).json({ message: 'user not found' });
+  }
+
+  if (!user.address) {
+    return res.status(400).json({ message: 'user has no address' });
+  }
+
+  const rides = await rideModel.findInProgressRidesForUser(body.username);
+  if (rides.length > 0) {
+    return res.status(400).json({ message: 'user has already requested a ride' });
+  }
+
+  const ride = await rideModel.createRide2(user);
+
+  console.log(`ride requested | RideId: ${ride._id} | Passenger: ${user.username}`);
+
+  return res.status(200).json({ message: `ride requested` });
+}
+
+export async function getAllRequestedRidesV2(req: Request, res: Response): Promise<Response> {
+  if (!req.body.username) {
+    return res.status(400).json({ message: 'username is required' });
+  }
+
+  const user = await userModel.findByUsername(req.body.username);
+
+  if (!user) {
+    return res.status(400).json({ message: 'user not found' });
+  }
+
+  const rides = await rideModel.findRequestedRides();
+
+  return res.status(200).json(rides);
 }

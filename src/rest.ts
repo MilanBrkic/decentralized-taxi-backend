@@ -1,5 +1,5 @@
 import express from 'express';
-import { createRide, endRide, startRide } from './services/RideService';
+import { arrangeRide, endRide, startRide } from './services/RideService';
 import { addWallet, login, register } from './services/UserService';
 import cors from 'cors';
 export function initHttpServer() {
@@ -15,7 +15,7 @@ export function initHttpServer() {
   app.post('/register', register);
   app.post('/login', login);
   app.post('/wallet', addWallet);
-  app.post('/ride', createRide);
+  app.post('/ride/:id/arrange', arrangeRide);
   app.post('/ride/:id/start', startRide);
   app.post('/ride/:id/end', endRide);
 

@@ -33,6 +33,14 @@ class RideModel {
     this.model = mongoose.model('rides', rideSchema);
   }
 
+  public async createRide2(passenger: IUserDb) {
+    const ride = this.model.create({
+      passenger,
+      status: RideStatus.Requested,
+    });
+    return ride as unknown as IRideDb;
+  }
+
   public async create(
     passenger: IUserDb,
     driver: IUserDb,
@@ -70,6 +78,23 @@ class RideModel {
         $or: [{ 'passenger.username': username }, { 'driver.username': username }],
       })
       .exec();
+    return rides as unknown as IRideDb[];
+  }
+
+  public async findInProgressRidesForUser(username: string): Promise<IRideDb[]> {
+    const excludedStatuses = [RideStatus.Ended, RideStatus.BeforeEndTimeout, RideStatus.BeforeStartTimeout];
+
+    const rides = await this.model
+      .find({
+        $or: [{ 'passenger.username': username }, { 'driver.username': username }],
+        status: { $nin: excludedStatuses },
+      })
+      .exec();
+    return rides as unknown as IRideDb[];
+  }
+
+  public async findRequestedRides(): Promise<IRideDb[]> {
+    const rides = await this.model.find({ status: RideStatus.Requested }).exec();
     return rides as unknown as IRideDb[];
   }
 }

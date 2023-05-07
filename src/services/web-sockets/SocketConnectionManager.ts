@@ -1,5 +1,4 @@
 import WebSocket, { WebSocketServer } from 'ws';
-import { randomUUID } from 'crypto';
 import { SocketMessageTypes } from './socket-messages/SocketMessageTypes';
 import { IConnectionData } from './socket-messages/IConnectionData';
 export class SocketConnectionManager {
