@@ -1,5 +1,5 @@
 import express from 'express';
-import { arrangeRide, endRide, startRide } from './services/RideService';
+import { arrangeRide, endRide, getAllRequestedRides, requestRide, startRide } from './services/RideService';
 import { addWallet, login, register } from './services/UserService';
 import cors from 'cors';
 export function initHttpServer() {
@@ -15,6 +15,8 @@ export function initHttpServer() {
   app.post('/register', register);
   app.post('/login', login);
   app.post('/wallet', addWallet);
+  app.get('/ride/get-requested', getAllRequestedRides);
+  app.post('/ride', requestRide);
   app.post('/ride/:id/arrange', arrangeRide);
   app.post('/ride/:id/start', startRide);
   app.post('/ride/:id/end', endRide);

@@ -172,7 +172,7 @@ export async function endRide(req: Request, res: Response): Promise<Response> {
   return res.status(200).json({ message: `ride ended for ${user.username}` });
 }
 
-export async function requestRideV2(req: Request, res: Response): Promise<Response> {
+export async function requestRide(req: Request, res: Response): Promise<Response> {
   const body = req.body;
 
   if (!body.username) {
@@ -201,18 +201,20 @@ export async function requestRideV2(req: Request, res: Response): Promise<Respon
   return res.status(200).json({ message: `ride requested` });
 }
 
-export async function getAllRequestedRidesV2(req: Request, res: Response): Promise<Response> {
-  if (!req.body.username) {
+export async function getAllRequestedRides(req: Request, res: Response): Promise<Response> {
+  if (!req.query.username) {
     return res.status(400).json({ message: 'username is required' });
   }
 
-  const user = await userModel.findByUsername(req.body.username);
+  const username = req.query.username as string;
+
+  const user = await userModel.findByUsername(username);
 
   if (!user) {
     return res.status(400).json({ message: 'user not found' });
   }
 
-  const rides = await rideModel.findRequestedRides();
+  const rides = await rideModel.findRequestedRides(username);
 
   return res.status(200).json(rides);
 }

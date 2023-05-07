@@ -38,7 +38,7 @@ export class User implements IUserDb {
 
   public async setRides(): Promise<void> {
     const rides = await rideModel.findRidesByUsername(this.username);
-    this.ridesAsDriver = rides.filter((ride) => ride.driver.username === this.username);
+    this.ridesAsDriver = rides.filter((ride) => ride.driver?.username === this.username);
     this.ridesAsPassenger = rides.filter((ride) => ride.passenger.username === this.username);
   }
 

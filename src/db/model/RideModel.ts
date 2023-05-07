@@ -93,8 +93,13 @@ class RideModel {
     return rides as unknown as IRideDb[];
   }
 
-  public async findRequestedRides(): Promise<IRideDb[]> {
-    const rides = await this.model.find({ status: RideStatus.Requested }).exec();
+  public async findRequestedRides(username: string): Promise<IRideDb[]> {
+    const rides = await this.model
+      .find({
+        'status': RideStatus.Requested,
+        'passenger.username': { $ne: username },
+      })
+      .exec();
     return rides as unknown as IRideDb[];
   }
 }
