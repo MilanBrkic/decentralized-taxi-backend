@@ -5,7 +5,6 @@ import { IConnectionData } from './socket-messages/IConnectionData';
 export class SocketConnectionManager {
   server!: WebSocket.Server;
   connections!: Map<string, WebSocket>;
-  usernameClientMap!: Map<string, string>;
 
   public init() {
     // Create a new WebSocket server
@@ -14,19 +13,15 @@ export class SocketConnectionManager {
 
     // Create a map to store active connections
     this.connections = new Map();
-    this.usernameClientMap = new Map();
 
     // When a new client connects, add it to the map and assign a unique ID
-    this.server.on('connection', (socket) => {
-      const clientId = randomUUID();
-      this.connections.set(clientId, socket);
-
+    this.server.on('connection', (socket: WebSocket.WebSocket) => {
       // When the client sends a message, broadcast it to all other clients
       socket.on('message', (message) => {
         const data = JSON.parse(message.toString());
         switch (data.type) {
           case SocketMessageTypes.CONNECTION:
-            this.connectionMessage(clientId, data.data);
+            this.connectionMessage(socket, data.data);
             break;
           default:
             console.log('Unknown message type');
@@ -36,12 +31,11 @@ export class SocketConnectionManager {
 
       // When the client closes the connection, remove it from the map and log the event
       socket.on('close', () => {
-        this.connections.delete(clientId);
         let username;
-        this.usernameClientMap.forEach((value, key) => {
-          if (value === clientId) {
+        this.connections.forEach((value, key) => {
+          if (value === socket) {
             username = key;
-            this.usernameClientMap.delete(key);
+            this.connections.delete(key);
           }
         });
 
@@ -50,9 +44,9 @@ export class SocketConnectionManager {
     });
   }
 
-  connectionMessage(clientId: string, data: IConnectionData) {
+  connectionMessage(socket: WebSocket.WebSocket, data: IConnectionData) {
     const username = data.username;
-    this.usernameClientMap.set(username, clientId);
+    this.connections.set(username, socket);
     console.log(`Client connected: ${username}`);
   }
 
