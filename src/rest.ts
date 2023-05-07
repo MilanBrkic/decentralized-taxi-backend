@@ -1,5 +1,13 @@
 import express from 'express';
-import { arrangeRide, bidOnRide, endRide, getAllRequestedRides, requestRide, startRide } from './services/RideService';
+import {
+  arrangeRide,
+  bidOnRide,
+  endRide,
+  getAllRequestedRides,
+  getRide,
+  requestRide,
+  startRide,
+} from './services/RideService';
 import { addWallet, login, register } from './services/UserService';
 import cors from 'cors';
 export function initHttpServer() {
@@ -21,6 +29,7 @@ export function initHttpServer() {
   app.post('/ride/:id/start', startRide);
   app.post('/ride/:id/end', endRide);
   app.post('/ride/:id/bid', bidOnRide);
+  app.get('/ride/:id', getRide);
 
   app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);

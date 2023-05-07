@@ -293,3 +293,15 @@ export async function bidOnRide(req: Request, res: Response): Promise<Response> 
   console.log(`Bid accepted | User: ${user.username} | RideId: ${ride._id} | Amount: ${body.amount}`);
   return res.status(200).send({ message: 'bid accepted' });
 }
+
+export async function getRide(req: Request, res: Response): Promise<Response> {
+  const rideId = req.params.id as string;
+
+  const ride = await rideModel.findById(rideId);
+
+  if (!ride) {
+    return res.status(404).json({ message: 'ride not found' });
+  }
+
+  return res.status(200).json(ride);
+}
