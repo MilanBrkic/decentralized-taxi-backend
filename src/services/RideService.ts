@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import rideModel from '../db/model/RideModel';
 import userModel from '../db/model/UserModel';
-import { createRideSchema } from './validation/Schemas';
+import { bidOnRideSchema, createRideSchema } from './validation/Schemas';
 import { JoiValidation } from './validation/Validation';
 import { reach } from './Reach';
 import { RideStatus } from '../enums/RideStatus';
 import Config from '../config/Config';
 import { User } from '../entities/User';
+import { DriverBid, IRideDb } from '../db/interface/IRideDb';
+import { DriverBidStatus } from '../enums/DriverBidStatus';
 
 export async function arrangeRide(req: Request, res: Response): Promise<Response> {
   const body = req.body;
@@ -218,4 +220,76 @@ export async function getAllRequestedRides(req: Request, res: Response): Promise
 
   console.log(`requested rides fetched | User: ${user.username}`);
   return res.status(200).json(rides);
+}
+
+function computeDriverBidStatuses(rides: IRideDb[], username: string) {
+  rides.forEach((ride: IRideDb) => {
+    if (ride.bids.length == 0) {
+      (ride as any).driverBidStatus = DriverBidStatus.NoBids;
+      return;
+    }
+
+    for (let i = 0; i < ride.bids.length; i++) {
+      if (ride.bids[i].username === username) {
+        if (i === 0) {
+          (ride as any).driverBidStatus = DriverBidStatus.LeadingBid;
+          return;
+        } else {
+          (ride as any).driverBidStatus = DriverBidStatus.AlreadyBid;
+          return;
+        }
+      } else {
+        (ride as any).driverBidStatus = DriverBidStatus.DidntBid;
+      }
+    }
+  });
+}
+
+export async function bidOnRide(req: Request, res: Response): Promise<Response> {
+  const body = req.body;
+
+  try {
+    JoiValidation.validate(bidOnRideSchema, body);
+  } catch (error) {
+    return res.status(400).json({ error });
+  }
+
+  const username = body.username;
+  const rideId = req.params.id as string;
+  const amount = body.amount * 1000000;
+
+  const user = await userModel.findByUsername(username);
+
+  if (!user) {
+    return res.status(400).json({ message: 'user not found' });
+  }
+
+  const ride = await rideModel.findById(rideId);
+
+  if (!ride) {
+    return res.status(400).json({ message: 'ride not found' });
+  }
+
+  if (ride.status !== RideStatus.Requested) {
+    return res.status(400).json({ message: 'ride not requested' });
+  }
+
+  if (ride.passenger.username === username) {
+    return res.status(400).json({ message: 'user is passenger' });
+  }
+  const bid = ride.bids.find((bid) => bid.username === username);
+  if (bid) {
+    if (amount < bid.amount) {
+      return res.status(400).json({ message: 'user already bid with the lower amount' });
+    } else {
+      bid.amount = amount;
+    }
+  } else {
+    ride.bids.push({ username: username, amount: body.amount * 1000000 });
+  }
+
+  await (ride as any).save();
+
+  console.log(`Bid accepted | User: ${user.username} | RideId: ${ride._id} | Amount: ${body.amount}`);
+  return res.status(200).send({ message: 'bid accepted' });
 }

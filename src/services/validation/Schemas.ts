@@ -28,6 +28,7 @@ export const createRideSchema = Joi.object({
   price: Joi.number().required(),
 });
 
-const mnemonicSchema = Joi.object({
-  mnemonic: Joi.string().required(),
+export const bidOnRideSchema = Joi.object({
+  username: Joi.string().required(),
+  amount: Joi.number().required(),
 });

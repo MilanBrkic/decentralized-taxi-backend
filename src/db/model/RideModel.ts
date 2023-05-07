@@ -25,6 +25,7 @@ const rideSchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
   paymentInfo: paymentInfoModelSchema,
   contractInfo: Object,
+  bids: { type: [{ username: String, amount: Number }], default: [] },
 });
 
 class RideModel {

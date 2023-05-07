@@ -19,4 +19,7 @@ export interface IRideDb {
   updatedAt: Date;
   paymentInfo: IPaymentInfoDb;
   contractInfo: ReachContractInfo;
+  bids: DriverBid[];
 }
+
+export type DriverBid = { username: string; amount: number };
