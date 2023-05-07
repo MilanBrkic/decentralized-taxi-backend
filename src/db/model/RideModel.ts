@@ -99,6 +99,7 @@ class RideModel {
         'status': RideStatus.Requested,
         'passenger.username': { $ne: username },
       })
+      .sort({ createdAt: 'desc' })
       .exec();
     return rides as unknown as IRideDb[];
   }

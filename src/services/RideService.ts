@@ -216,5 +216,6 @@ export async function getAllRequestedRides(req: Request, res: Response): Promise
 
   const rides = await rideModel.findRequestedRides(username);
 
+  console.log(`requested rides fetched | User: ${user.username}`);
   return res.status(200).json(rides);
 }
