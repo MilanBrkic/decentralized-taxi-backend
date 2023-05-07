@@ -55,20 +55,9 @@ export async function login(req: Request, res: Response): Promise<Response> {
       return res.status(400).json({ message: 'wrong password' });
     } else {
       const enricherUser = new User(user);
-      if (enricherUser.address) {
-        await enricherUser.setWallet();
-        await enricherUser.setBalance();
-        await enricherUser.setRides();
-      }
+      await enricherUser.equipUserFully();
 
-      return res.status(200).json({
-        username: user.username,
-        phoneNumber: user.phoneNumber,
-        address: user.address,
-        balance: enricherUser.balance,
-        ridesAsDriver: enricherUser.ridesAsDriver,
-        ridesAsPassenger: enricherUser.ridesAsPassenger,
-      });
+      return res.status(200).json(enricherUser.toDto());
     }
   }
 }
@@ -109,5 +98,8 @@ export async function addWallet(req: Request, res: Response): Promise<Response> 
 
   await userByUsername.save();
 
-  return res.status(200).json({ message: 'wallet added' });
+  const enricherUser = new User(userByUsername);
+  await enricherUser.equipUserFully();
+
+  return res.status(200).json(enricherUser.toDto());
 }

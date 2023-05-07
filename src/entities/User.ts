@@ -41,4 +41,23 @@ export class User implements IUserDb {
     this.ridesAsDriver = rides.filter((ride) => ride.driver.username === this.username);
     this.ridesAsPassenger = rides.filter((ride) => ride.passenger.username === this.username);
   }
+
+  public async equipUserFully(): Promise<void> {
+    if (this.address) {
+      await this.setWallet();
+      await this.setBalance();
+      await this.setRides();
+    }
+  }
+
+  public toDto(): any {
+    return {
+      username: this.username,
+      phoneNumber: this.phoneNumber,
+      address: this.address,
+      balance: this.balance,
+      ridesAsDriver: this.ridesAsDriver,
+      ridesAsPassenger: this.ridesAsPassenger,
+    };
+  }
 }
