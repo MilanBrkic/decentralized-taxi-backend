@@ -55,9 +55,11 @@ export async function login(req: Request, res: Response): Promise<Response> {
       return res.status(400).json({ message: 'wrong password' });
     } else {
       const enricherUser = new User(user);
-      await enricherUser.setWallet();
-      await enricherUser.setBalance();
-      await enricherUser.setRides();
+      if (enricherUser.address) {
+        await enricherUser.setWallet();
+        await enricherUser.setBalance();
+        await enricherUser.setRides();
+      }
 
       return res.status(200).json({
         username: user.username,

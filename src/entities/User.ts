@@ -29,6 +29,9 @@ export class User implements IUserDb {
   }
 
   public async setBalance(): Promise<void> {
+    if (!this.wallet) {
+      await this.setWallet();
+    }
     const balance = await reach.getBalanceStandardUnit(this.wallet);
     this.balance = balance;
   }
