@@ -2,6 +2,7 @@ import express from 'express';
 import {
   arrangeRide,
   bidOnRide,
+  cancelRide,
   endRide,
   getAllRequestedRides,
   getRide,
@@ -30,6 +31,7 @@ export function initHttpServer() {
   app.post('/ride/:id/start', startRide);
   app.post('/ride/:id/end', endRide);
   app.post('/ride/:id/bid', bidOnRide);
+  app.post('/ride/:id/cancel', cancelRide);
   app.get('/ride/:id', getRide);
 
   app.listen(port, () => {

@@ -201,7 +201,7 @@ export async function requestRide(req: Request, res: Response): Promise<Response
 
   console.log(`ride requested | RideId: ${ride._id} | Passenger: ${user.username}`);
 
-  return res.status(200).json({ message: `ride requested` });
+  return res.status(200).json(ride);
 }
 
 export async function getAllRequestedRides(req: Request, res: Response): Promise<Response> {
@@ -325,4 +325,22 @@ export async function getRide(req: Request, res: Response): Promise<Response> {
   ride.bids.sort((a, b) => b.amount - a.amount);
 
   return res.status(200).json(ride);
+}
+
+export async function cancelRide(req: Request, res: Response): Promise<Response> {
+  const rideId = req.params.id as string;
+
+  const ride = await rideModel.findById(rideId);
+
+  if (!ride) {
+    return res.status(404).json({ message: 'ride not found' });
+  }
+
+  if (ride.status !== RideStatus.Requested) {
+    return res.status(400).json({ message: 'ride not requested' });
+  }
+
+  await rideModel.deleteRideById(rideId);
+
+  return res.status(200).json({ message: 'ride canceled' });
 }

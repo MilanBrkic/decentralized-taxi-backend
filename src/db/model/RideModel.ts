@@ -104,6 +104,10 @@ class RideModel {
       .exec();
     return rides as unknown as IRideDb[];
   }
+
+  public async deleteRideById(rideId: string): Promise<void> {
+    await this.model.deleteOne({ _id: rideId }).exec();
+  }
 }
 
 const rideModel = new RideModel();
