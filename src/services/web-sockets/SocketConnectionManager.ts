@@ -54,10 +54,10 @@ class SocketConnectionManager {
     console.log(`Client connected: ${username}`);
   }
 
-  broadcastMessage(senderId: string, message: any) {
-    this.connections.forEach((socket, clientId) => {
-      if (clientId !== senderId) {
-        socket.send(message);
+  broadcastMessage(senderUsername: string, message: any) {
+    this.connections.forEach((socket, username) => {
+      if (username !== senderUsername) {
+        socket.send(JSON.stringify(message));
       }
     });
   }

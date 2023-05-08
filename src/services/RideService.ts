@@ -199,6 +199,11 @@ export async function requestRide(req: Request, res: Response): Promise<Response
 
   const ride = await rideModel.createRide2(user);
 
+  socketConnectionManager.broadcastMessage(body.username, {
+    type: 'ride_requested',
+    data: { _id: ride._id, passenger: { username: body.username }, createdAt: ride.createdAt },
+  });
+
   console.log(`ride requested | RideId: ${ride._id} | Passenger: ${user.username}`);
 
   return res.status(200).json(ride);
@@ -330,6 +335,12 @@ export async function getRide(req: Request, res: Response): Promise<Response> {
 export async function cancelRide(req: Request, res: Response): Promise<Response> {
   const rideId = req.params.id as string;
 
+  const body = req.body;
+
+  if (!body.username) {
+    return res.status(400).json({ message: 'username is required' });
+  }
+
   const ride = await rideModel.findById(rideId);
 
   if (!ride) {
@@ -341,6 +352,11 @@ export async function cancelRide(req: Request, res: Response): Promise<Response>
   }
 
   await rideModel.deleteRideById(rideId);
+
+  socketConnectionManager.broadcastMessage(body.username, {
+    type: 'ride_canceled',
+    data: { _id: ride._id },
+  });
 
   return res.status(200).json({ message: 'ride canceled' });
 }
