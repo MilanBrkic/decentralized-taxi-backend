@@ -8,7 +8,7 @@ import {
   requestRide,
   startRide,
 } from './services/RideService';
-import { addWallet, login, register } from './services/UserService';
+import { addWallet, getUser, login, register } from './services/UserService';
 import cors from 'cors';
 export function initHttpServer() {
   const app = express();
@@ -23,6 +23,7 @@ export function initHttpServer() {
   app.post('/register', register);
   app.post('/login', login);
   app.post('/wallet', addWallet);
+  app.get('/user/:username', getUser);
   app.get('/ride/get-requested', getAllRequestedRides);
   app.post('/ride', requestRide);
   app.post('/ride/:id/arrange', arrangeRide);

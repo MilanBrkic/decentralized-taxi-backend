@@ -62,6 +62,24 @@ export async function login(req: Request, res: Response): Promise<Response> {
   }
 }
 
+export async function getUser(req: Request, res: Response): Promise<Response> {
+  const username = req.params.username;
+
+  if (!username) {
+    return res.status(400).json({ message: 'username not provided' });
+  }
+
+  const user = await userModel.findByUsername(username);
+  if (!user) {
+    return res.status(400).json({ message: 'user not found' });
+  } else {
+    const enricherUser = new User(user);
+    await enricherUser.equipUserFully();
+
+    return res.status(200).json(enricherUser.toDto());
+  }
+}
+
 function validateMnemonic(mnemonic: string): void {
   JoiValidation.validate(Joi.object({ mnemonic: Joi.string().required() }), { mnemonic });
 
