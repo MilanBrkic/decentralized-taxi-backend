@@ -7,8 +7,9 @@ import { reach } from './Reach';
 import { RideStatus } from '../enums/RideStatus';
 import Config from '../config/Config';
 import { User } from '../entities/User';
-import { DriverBid, IRideDb } from '../db/interface/IRideDb';
+import { IRideDb } from '../db/interface/IRideDb';
 import { DriverBidStatus } from '../enums/DriverBidStatus';
+import { socketConnectionManager } from './web-sockets/SocketConnectionManager';
 
 export async function arrangeRide(req: Request, res: Response): Promise<Response> {
   const body = req.body;
@@ -277,6 +278,7 @@ export async function bidOnRide(req: Request, res: Response): Promise<Response> 
   if (ride.passenger.username === username) {
     return res.status(400).json({ message: 'user is passenger' });
   }
+
   const bid = ride.bids.find((bid) => bid.username === username);
   if (bid) {
     if (amount < bid.amount) {
@@ -285,10 +287,27 @@ export async function bidOnRide(req: Request, res: Response): Promise<Response> 
       bid.amount = amount;
     }
   } else {
-    ride.bids.push({ username: username, amount: body.amount * 1000000 });
+    ride.bids.push({ username: username, amount });
   }
 
   await (ride as any).save();
+
+  const socket = socketConnectionManager.connections.get(ride.passenger.username);
+
+  if (socket) {
+    const data = {
+      type: 'bid',
+      data: ride.bids
+        .sort((a, b) => b.amount - a.amount)
+        .map((bid) => {
+          return {
+            username: bid.username,
+            amount: bid.amount,
+          };
+        }),
+    };
+    socket.send(JSON.stringify(data));
+  }
 
   console.log(`Bid accepted | User: ${user.username} | RideId: ${ride._id} | Amount: ${body.amount}`);
   return res.status(200).send({ message: 'bid accepted' });
@@ -302,6 +321,8 @@ export async function getRide(req: Request, res: Response): Promise<Response> {
   if (!ride) {
     return res.status(404).json({ message: 'ride not found' });
   }
+
+  ride.bids.sort((a, b) => b.amount - a.amount);
 
   return res.status(200).json(ride);
 }

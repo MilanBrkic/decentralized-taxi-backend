@@ -1,9 +1,10 @@
 import WebSocket, { WebSocketServer } from 'ws';
 import { SocketMessageTypes } from './socket-messages/SocketMessageTypes';
 import { IConnectionData } from './socket-messages/IConnectionData';
-export class SocketConnectionManager {
+class SocketConnectionManager {
   server!: WebSocket.Server;
   connections!: Map<string, WebSocket>;
+  constructor() {}
 
   public init() {
     // Create a new WebSocket server
@@ -41,6 +42,10 @@ export class SocketConnectionManager {
         console.log(`Client disconnected: ${username}`);
       });
     });
+  }
+
+  public getConnections(): Map<string, WebSocket> {
+    return this.connections;
   }
 
   connectionMessage(socket: WebSocket.WebSocket, data: IConnectionData) {
