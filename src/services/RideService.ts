@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import rideModel from '../db/model/RideModel';
 import userModel from '../db/model/UserModel';
-import { bidOnRideSchema, createRideSchema } from './validation/Schemas';
+import { bidOnRideSchema, createRideSchema, requestRideSchema } from './validation/Schemas';
 import { JoiValidation } from './validation/Validation';
 import { reach } from './Reach';
 import { RideStatus } from '../enums/RideStatus';
@@ -178,10 +178,11 @@ export async function endRide(req: Request, res: Response): Promise<Response> {
 export async function requestRide(req: Request, res: Response): Promise<Response> {
   const body = req.body;
 
-  if (!body.username) {
-    return res.status(400).json({ message: 'username is required' });
+  try {
+    JoiValidation.validate(requestRideSchema, body);
+  } catch (error) {
+    return res.status(400).json({ error });
   }
-
   const user = await userModel.findByUsername(body.username);
 
   if (!user) {
@@ -197,11 +198,11 @@ export async function requestRide(req: Request, res: Response): Promise<Response
     return res.status(400).json({ message: 'user has already requested a ride' });
   }
 
-  const ride = await rideModel.createRide2(user);
+  const ride = await rideModel.createRide2(user, body.from_coordinates, body.to_coordinates);
 
   socketConnectionManager.broadcastMessage(body.username, {
     type: 'ride_requested',
-    data: { _id: ride._id, passenger: { username: body.username }, createdAt: ride.createdAt },
+    data: { _id: ride._id, passenger: { username: body.usernamape }, createdAt: ride.createdAt },
   });
 
   console.log(`ride requested | RideId: ${ride._id} | Passenger: ${user.username}`);

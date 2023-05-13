@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import {
   arrangeRide,
   bidOnRide,
@@ -15,6 +15,7 @@ export function initHttpServer() {
   const app = express();
   const port = 3000;
 
+  app.use(timerMiddleware);
   app.use(express.json());
   app.use(cors());
   app.get('/', (req, res) => {
@@ -38,3 +39,14 @@ export function initHttpServer() {
     console.log(`Example app listening on port ${port}`);
   });
 }
+
+const timerMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const start = new Date();
+  console.log(`Received ${req.method} ${req.originalUrl}`);
+
+  res.on('finish', () => {
+    const elapsed = new Date().getTime() - start.getTime();
+    console.log(`${req.method} ${req.originalUrl} ${res.statusCode} in ${elapsed}ms`);
+  });
+  next();
+};

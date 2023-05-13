@@ -32,3 +32,9 @@ export const bidOnRideSchema = Joi.object({
   username: Joi.string().required(),
   amount: Joi.number().required(),
 });
+
+export const requestRideSchema = Joi.object({
+  username: Joi.string().required(),
+  from_coordinates: coordinatesSchema.required(),
+  to_coordinates: coordinatesSchema.required(),
+});

@@ -34,10 +34,12 @@ class RideModel {
     this.model = mongoose.model('rides', rideSchema);
   }
 
-  public async createRide2(passenger: IUserDb) {
+  public async createRide2(passenger: IUserDb, fromCoordinates: ICoordinatesDb, toCoordinates: ICoordinatesDb) {
     const ride = this.model.create({
       passenger,
       status: RideStatus.Requested,
+      fromCoordinates,
+      toCoordinates,
     });
     return ride as unknown as IRideDb;
   }
