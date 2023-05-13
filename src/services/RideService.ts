@@ -298,12 +298,11 @@ export async function bidOnRide(req: Request, res: Response): Promise<Response> 
 
   await (ride as any).save();
 
-  const socket = socketConnectionManager.connections.get(ride.passenger.username);
-
-  if (socket) {
-    const data = {
-      type: 'bid',
-      data: ride.bids
+  const data = {
+    type: 'bid',
+    data: {
+      rideId: ride._id,
+      bids: ride.bids
         .sort((a, b) => b.amount - a.amount)
         .map((bid) => {
           return {
@@ -311,9 +310,10 @@ export async function bidOnRide(req: Request, res: Response): Promise<Response> 
             amount: bid.amount,
           };
         }),
-    };
-    socket.send(JSON.stringify(data));
-  }
+    },
+  };
+
+  socketConnectionManager.broadcastMessage('', data);
 
   console.log(`Bid accepted | User: ${user.username} | RideId: ${ride._id} | Amount: ${body.amount}`);
   return res.status(200).send({ message: 'bid accepted' });
