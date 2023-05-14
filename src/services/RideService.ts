@@ -202,7 +202,7 @@ export async function requestRide(req: Request, res: Response): Promise<Response
 
   socketConnectionManager.broadcastMessage(body.username, {
     type: 'ride_requested',
-    data: { _id: ride._id, passenger: { username: body.usernamape }, createdAt: ride.createdAt },
+    data: { _id: ride._id, passenger: { username: body.username }, createdAt: ride.createdAt },
   });
 
   console.log(`ride requested | RideId: ${ride._id} | Passenger: ${user.username}`);
