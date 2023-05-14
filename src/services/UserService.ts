@@ -6,6 +6,7 @@ import { addWalletSchema, loginSchema, registerSchema } from './validation/Schem
 import { encryptService } from './EncryptService';
 import { reach } from './Reach';
 import { User } from '../entities/User';
+import { socketConnectionManager } from './web-sockets/SocketConnectionManager';
 
 export async function register(req: Request, res: Response): Promise<Response> {
   const body = req.body;
@@ -50,6 +51,11 @@ export async function login(req: Request, res: Response): Promise<Response> {
   if (!user) {
     return res.status(400).json({ message: 'user not found' });
   } else {
+    // const socket = socketConnectionManager.connections.get(body.username);
+    // if (socket) {
+    //   return res.status(400).json({ message: 'user already logged in' });
+    // }
+
     const encryptedPassword = encryptService.hash(body.password);
     if (user.password !== encryptedPassword) {
       return res.status(400).json({ message: 'wrong password' });

@@ -10,6 +10,7 @@ import { User } from '../entities/User';
 import { IRideDb } from '../db/interface/IRideDb';
 import { DriverBidStatus } from '../enums/DriverBidStatus';
 import { socketConnectionManager } from './web-sockets/SocketConnectionManager';
+import { MessageType } from './web-sockets/socket-messages/MessageType';
 
 export async function arrangeRide(req: Request, res: Response): Promise<Response> {
   const body = req.body;
@@ -201,7 +202,7 @@ export async function requestRide(req: Request, res: Response): Promise<Response
   const ride = await rideModel.createRide2(user, body.from_coordinates, body.to_coordinates);
 
   socketConnectionManager.broadcastMessage(body.username, {
-    type: 'ride_requested',
+    type: MessageType.RideRequested,
     data: { _id: ride._id, passenger: { username: body.username }, createdAt: ride.createdAt },
   });
 
@@ -299,7 +300,7 @@ export async function bidOnRide(req: Request, res: Response): Promise<Response> 
   await (ride as any).save();
 
   const data = {
-    type: 'bid',
+    type: MessageType.Bid,
     data: {
       rideId: ride._id,
       bids: ride.bids
@@ -355,7 +356,7 @@ export async function cancelRide(req: Request, res: Response): Promise<Response>
   await rideModel.deleteRideById(rideId);
 
   socketConnectionManager.broadcastMessage(body.username, {
-    type: 'ride_canceled',
+    type: MessageType.RideCanceled,
     data: { _id: ride._id },
   });
 
