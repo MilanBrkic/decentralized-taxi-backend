@@ -21,10 +21,7 @@ export const coordinatesSchema = Joi.object({
 });
 
 export const createRideSchema = Joi.object({
-  passenger_username: Joi.string().required(),
   driver_username: Joi.string().required(),
-  from_coordinates: coordinatesSchema.required(),
-  to_coordinates: coordinatesSchema.required(),
   price: Joi.number().required(),
 });
 

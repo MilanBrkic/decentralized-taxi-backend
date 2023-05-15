@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import {
-  arrangeRide,
+  acceptRide,
   bidOnRide,
   cancelRide,
   endRide,
@@ -28,7 +28,7 @@ export function initHttpServer() {
   app.get('/user/:username', getUser);
   app.get('/ride/get-requested', getAllRequestedRides);
   app.post('/ride', requestRide);
-  app.post('/ride/:id/arrange', arrangeRide);
+  app.post('/ride/:id/accept', acceptRide);
   app.post('/ride/:id/start', startRide);
   app.post('/ride/:id/end', endRide);
   app.post('/ride/:id/bid', bidOnRide);

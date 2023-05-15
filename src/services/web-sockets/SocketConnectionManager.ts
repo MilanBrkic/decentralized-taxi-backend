@@ -1,6 +1,7 @@
 import WebSocket, { WebSocketServer } from 'ws';
 import { SocketMessageTypes } from './socket-messages/SocketMessageTypes';
 import { IConnectionData } from './socket-messages/IConnectionData';
+import { MessageType } from './socket-messages/MessageType';
 class SocketConnectionManager {
   server!: WebSocket.Server;
   connections!: Map<string, WebSocket>;
@@ -46,6 +47,16 @@ class SocketConnectionManager {
 
   public getConnections(): Map<string, WebSocket> {
     return this.connections;
+  }
+
+  sendRideDeployed(usernames: string[], rideId: string, success: boolean): void {
+    const sockets = usernames.map((username) => this.connections.get(username));
+
+    sockets.forEach((socket) => {
+      if (socket) {
+        socket.send(JSON.stringify({ type: MessageType.RideDeployed, data: { rideId, success } }));
+      }
+    });
   }
 
   connectionMessage(socket: WebSocket.WebSocket, data: IConnectionData) {

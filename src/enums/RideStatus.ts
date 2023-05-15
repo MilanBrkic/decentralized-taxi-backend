@@ -6,4 +6,5 @@ export enum RideStatus {
   Started = 'started',
   BeforeEndTimeout = 'before_end_timeout',
   Ended = 'ended',
+  Failed = 'failed',
 }

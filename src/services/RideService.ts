@@ -12,8 +12,9 @@ import { DriverBidStatus } from '../enums/DriverBidStatus';
 import { socketConnectionManager } from './web-sockets/SocketConnectionManager';
 import { MessageType } from './web-sockets/socket-messages/MessageType';
 
-export async function arrangeRide(req: Request, res: Response): Promise<Response> {
+export async function acceptRide(req: Request, res: Response): Promise<any> {
   const body = req.body;
+  const rideId = req.params.id;
 
   try {
     JoiValidation.validate(createRideSchema, body);
@@ -21,24 +22,24 @@ export async function arrangeRide(req: Request, res: Response): Promise<Response
     return res.status(400).json({ error });
   }
 
-  if (body.passenger_username === body.driver_username) {
-    return res.status(400).json({ error: 'passenger and driver cannot be the same user' });
+  if (!rideId) {
+    return res.status(400).json({ error: 'ride id is required' });
   }
 
-  const [passengerDb, driverDb] = await Promise.all([
-    userModel.findByUsername(body.passenger_username),
-    userModel.findByUsername(body.driver_username),
-  ]);
-
-  if (!passengerDb) {
-    return res.status(400).json({ error: 'passenger not found' });
-  }
+  const driverDb = await userModel.findByUsername(body.driver_username);
 
   if (!driverDb) {
     return res.status(400).json({ error: 'driver not found' });
   }
 
-  const ride = await rideModel.create(passengerDb, driverDb, body.from_coordinates, body.to_coordinates, body.price);
+  const ride = await rideModel.findById(rideId);
+  if (!ride) {
+    return res.status(400).json({ error: 'ride not found' });
+  }
+
+  const passengerDb = ride.passenger;
+
+  await rideModel.updateAcceptRide(rideId, driverDb, body.price);
 
   console.log(
     `Ride inserted in db, waiting for it's contract to be deployed | Passenger: ${passengerDb.username} | Driver: ${driverDb.username} | RideId: ${ride._id}`
@@ -46,14 +47,21 @@ export async function arrangeRide(req: Request, res: Response): Promise<Response
 
   const passenger = new User(passengerDb);
   const driver = new User(driverDb);
+  await Promise.all([passenger.setWallet(), driver.setWallet()]);
+
+  res.status(200).json({ message: 'ride started', ride_id: ride._id });
+  socketConnectionManager.connections
+    .get(driver.username)
+    ?.send(JSON.stringify({ type: MessageType.RideArranged, data: { ride } }));
 
   let contractInfo;
   try {
-    await Promise.all([passenger.setWallet(), driver.setWallet()]);
     contractInfo = await reach.launchRide(passenger, driver, body.price, ride._id);
   } catch (error: any) {
     console.log(`could not launch ride | RideId: ${ride._id} | Error: ${error.stack}`);
-    return res.status(500).json({ error: 'could not launch ride' });
+    socketConnectionManager.sendRideDeployed([passenger.username, driver.username], ride._id, false);
+    await rideModel.updateStatus(ride._id, RideStatus.Failed);
+    return;
   }
 
   await rideModel.updateContractInfo(ride._id, contractInfo);
@@ -61,7 +69,6 @@ export async function arrangeRide(req: Request, res: Response): Promise<Response
   console.log(
     `ride created | Passenger: ${passengerDb.username} | Driver: ${driverDb.username} |  RideId: ${ride._id}  | ContractInfo: ${contractInfo} | Price: ${body.price}`
   );
-  return res.status(200).json({ message: 'ride started', ride_id: ride._id });
 }
 
 export async function startRide(req: Request, res: Response): Promise<Response> {
@@ -199,11 +206,11 @@ export async function requestRide(req: Request, res: Response): Promise<Response
     return res.status(400).json({ message: 'user has already requested a ride' });
   }
 
-  const ride = await rideModel.createRide2(user, body.from_coordinates, body.to_coordinates);
+  const ride = await rideModel.createRide(user, body.from_coordinates, body.to_coordinates);
 
   socketConnectionManager.broadcastMessage(body.username, {
     type: MessageType.RideRequested,
-    data: { _id: ride._id, passenger: { username: body.username }, createdAt: ride.createdAt },
+    data: { ride },
   });
 
   console.log(`ride requested | RideId: ${ride._id} | Passenger: ${user.username}`);

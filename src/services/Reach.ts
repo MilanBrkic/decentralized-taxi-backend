@@ -9,6 +9,7 @@ import { RideStatus } from '../enums/RideStatus';
 import * as backend from '../smart-contracts/index.main';
 import { ReachAccount, ReachContract, ReachContractInfo, ReachEvent, ReachStdlib } from '../types/ReachTypes';
 import { Sleep } from '../utilities/Sleep';
+import { socketConnectionManager } from './web-sockets/SocketConnectionManager';
 
 export class Reach {
   stdlib!: ReachStdlib;
@@ -210,6 +211,8 @@ export class Reach {
         throw error;
       }
     }
+
+    socketConnectionManager.sendRideDeployed([passenger.username, driver.username], rideId, true);
 
     this.timeOutedAdminInterfereStart(contractInfo, rideId, Config.RIDE_START_TIMEOUT);
 

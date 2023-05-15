@@ -34,7 +34,7 @@ class RideModel {
     this.model = mongoose.model('rides', rideSchema);
   }
 
-  public async createRide2(passenger: IUserDb, fromCoordinates: ICoordinatesDb, toCoordinates: ICoordinatesDb) {
+  public async createRide(passenger: IUserDb, fromCoordinates: ICoordinatesDb, toCoordinates: ICoordinatesDb) {
     const ride = this.model.create({
       passenger,
       status: RideStatus.Requested,
@@ -70,6 +70,12 @@ class RideModel {
     await this.model.updateOne({ _id: rideId }, { contractInfo, updatedAt: new Date() }).exec();
   }
 
+  public async updateAcceptRide(rideId: string, driver: IUserDb, price: number): Promise<IRideDb> {
+    return (await this.model
+      .findByIdAndUpdate(rideId, { driver, price, status: RideStatus.Created, updatedAt: new Date() })
+      .exec()) as unknown as IRideDb;
+  }
+
   public async findById(rideId: string): Promise<IRideDb> {
     const ride = await this.model.findById(rideId).exec();
     return ride as unknown as IRideDb;
@@ -85,7 +91,12 @@ class RideModel {
   }
 
   public async findInProgressRidesForUser(username: string): Promise<IRideDb[]> {
-    const excludedStatuses = [RideStatus.Ended, RideStatus.BeforeEndTimeout, RideStatus.BeforeStartTimeout];
+    const excludedStatuses = [
+      RideStatus.Ended,
+      RideStatus.BeforeEndTimeout,
+      RideStatus.BeforeStartTimeout,
+      RideStatus.Failed,
+    ];
 
     const rides = await this.model
       .find({
