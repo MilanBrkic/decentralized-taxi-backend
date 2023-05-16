@@ -32,14 +32,8 @@ class SocketConnectionManager {
 
       // When the client closes the connection, remove it from the map and log the event
       socket.on('close', () => {
-        let username;
-        this.connections.forEach((value, key) => {
-          if (value === socket) {
-            username = key;
-            this.connections.delete(key);
-          }
-        });
-
+        const username = (socket as any)._username;
+        this.connections.delete(username);
         console.log(`Client disconnected: ${username}`);
       });
     });
@@ -62,6 +56,7 @@ class SocketConnectionManager {
   connectionMessage(socket: WebSocket.WebSocket, data: IConnectionData) {
     const username = data.username;
     this.connections.set(username, socket);
+    (socket as any)._username = username;
     console.log(`Client connected: ${username}`);
   }
 
