@@ -4,4 +4,5 @@ export enum MessageType {
   RideArranged = 'ride_arranged',
   RideRequested = 'ride_requested',
   RideCanceled = 'ride_canceled',
+  RideTimeout = 'ride_timeout',
 }

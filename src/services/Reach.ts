@@ -10,6 +10,7 @@ import * as backend from '../smart-contracts/index.main';
 import { ReachAccount, ReachContract, ReachContractInfo, ReachEvent, ReachStdlib } from '../types/ReachTypes';
 import { Sleep } from '../utilities/Sleep';
 import { socketConnectionManager } from './web-sockets/SocketConnectionManager';
+import { MessageType } from './web-sockets/socket-messages/MessageType';
 
 export class Reach {
   stdlib!: ReachStdlib;
@@ -146,6 +147,13 @@ export class Reach {
       try {
         await this.adminInterfereStart(contractInfo);
         await rideModel.updateStatus(rideId, RideStatus.BeforeStartTimeout);
+
+        const ride = await rideModel.findById(rideId);
+        [ride.passenger.username, ride.driver.username].forEach((username) =>
+          socketConnectionManager.connections
+            .get(username)
+            ?.send(JSON.stringify({ type: MessageType.RideTimeout, data: { ride } }))
+        );
         console.log(`Admin interfered on ride start | RideId: ${rideId}`);
       } catch (error: any) {
         if (!error.message.includes('getCurrentStep_') && !error.message.includes('Expected the DApp')) {
