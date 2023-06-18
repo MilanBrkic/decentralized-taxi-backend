@@ -10,7 +10,7 @@ import { ISubscribeToDriverLocationData } from './socket-messages/ISubscribeToDr
 import { MyWebSocket } from './MyWebSocket';
 class SocketConnectionManager {
   server!: WebSocket.Server;
-  connections!: Map<string, WebSocket>;
+  connections!: Map<string, MyWebSocket>;
   constructor() {}
 
   public init() {

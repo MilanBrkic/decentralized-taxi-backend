@@ -155,6 +155,10 @@ export class Reach {
             ?.send(JSON.stringify({ type: MessageType.RideTimeout, data: { ride } }))
         );
         console.log(`Admin interfered on ride start | RideId: ${rideId}`);
+
+        socketConnectionManager.connections
+          .get(ride.driver.username)
+          ?._intervals.forEach((interval) => clearInterval(interval));
       } catch (error: any) {
         if (!error.message.includes('getCurrentStep_') && !error.message.includes('Expected the DApp')) {
           console.log(`Error when calling adminInterfereStart | RideId: ${rideId}`, error.message);
@@ -222,7 +226,7 @@ export class Reach {
 
     socketConnectionManager.sendRideDeployed([passenger.username, driver.username], rideId, true);
 
-    // this.timeOutedAdminInterfereStart(contractInfo, rideId, Config.RIDE_START_TIMEOUT);
+    this.timeOutedAdminInterfereStart(contractInfo, rideId, Config.RIDE_START_TIMEOUT);
 
     return contractInfo;
   }
