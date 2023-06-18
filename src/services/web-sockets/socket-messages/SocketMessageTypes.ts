@@ -1,3 +1,1 @@
-export enum SocketMessageTypes {
-  CONNECTION = 'connection',
-}
+export enum SocketMessageTypes {}

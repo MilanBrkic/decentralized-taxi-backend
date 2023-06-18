@@ -2,6 +2,12 @@ import WebSocket, { WebSocketServer } from 'ws';
 import { SocketMessageTypes } from './socket-messages/SocketMessageTypes';
 import { IConnectionData } from './socket-messages/IConnectionData';
 import { MessageType } from './socket-messages/MessageType';
+import { IReturnDriverLocationData } from './socket-messages/IReturnDriverLocationData';
+import { User } from '../../entities/User';
+import { IRideDb } from '../../db/interface/IRideDb';
+import Config from '../../config/Config';
+import { ISubscribeToDriverLocationData } from './socket-messages/ISubscribeToDriverLocationData';
+import { MyWebSocket } from './MyWebSocket';
 class SocketConnectionManager {
   server!: WebSocket.Server;
   connections!: Map<string, WebSocket>;
@@ -16,24 +22,33 @@ class SocketConnectionManager {
     this.connections = new Map();
 
     // When a new client connects, add it to the map and assign a unique ID
-    this.server.on('connection', (socket: WebSocket.WebSocket) => {
+    this.server.on('connection', (socket: MyWebSocket) => {
+      socket._intervals = [];
       // When the client sends a message, broadcast it to all other clients
       socket.on('message', (message) => {
         const data = JSON.parse(message.toString());
+        console.log(`Received message from ${socket._username} | type: ${data.type}`);
         switch (data.type) {
-          case SocketMessageTypes.CONNECTION:
+          case MessageType.Connection:
             this.connectionMessage(socket, data.data);
             break;
+          case MessageType.ReturnDriverLocation:
+            this.returnDriverLocationMessage(data.data);
+            break;
+          case MessageType.SubscribeToDriverLocation:
+            this.pingDriverLocation(socket, data.data);
+            break;
           default:
-            console.log('Unknown message type');
+            console.log('Unknown message type', data.type);
             break;
         }
       });
 
       // When the client closes the connection, remove it from the map and log the event
       socket.on('close', () => {
-        const username = (socket as any)._username;
+        const username = socket._username;
         this.connections.delete(username);
+        socket._intervals.forEach((interval) => clearInterval(interval));
         console.log(`Client disconnected: ${username}`);
       });
     });
@@ -53,11 +68,32 @@ class SocketConnectionManager {
     });
   }
 
-  connectionMessage(socket: WebSocket.WebSocket, data: IConnectionData) {
+  connectionMessage(socket: MyWebSocket, data: IConnectionData) {
     const username = data.username;
     this.connections.set(username, socket);
     (socket as any)._username = username;
     console.log(`Client connected: ${username}`);
+  }
+
+  returnDriverLocationMessage(data: IReturnDriverLocationData) {
+    const passengerUsername = data.ride.passenger.username;
+
+    const passengerSocket = this.connections.get(passengerUsername);
+
+    if (passengerSocket) {
+      passengerSocket.send(JSON.stringify({ type: MessageType.ReturnDriverLocation, data }));
+    }
+  }
+
+  pingDriverLocation(socket: MyWebSocket, data: ISubscribeToDriverLocationData) {
+    const driver = data.ride.driver as User;
+    const intervalId = setInterval(async () => {
+      socketConnectionManager.connections
+        .get(driver.username)
+        ?.send(JSON.stringify({ type: MessageType.ReturnDriverLocation, data: { ride: data.ride } }));
+    }, Config.DRIVER_LOCATION_PING_INTERVAL);
+
+    socket._intervals.push(intervalId);
   }
 
   broadcastMessage(senderUsername: string, message: any) {

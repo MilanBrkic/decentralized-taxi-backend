@@ -3,6 +3,7 @@ if (process.env.NODE_ENV === 'development') {
   dotenv.config();
 }
 export default class Config {
+  public static readonly DRIVER_LOCATION_PING_INTERVAL = 5 * 1000;
   public static readonly MONGO_DB_USERNAME = process.env.MONGO_DB_USERNAME;
   public static readonly MONGO_DB_PASSWORD = process.env.MONGO_DB_PASSWORD;
   public static readonly MONGO_BASE_CONNECTION_URL = `mongodb+srv://${this.MONGO_DB_USERNAME}:${this.MONGO_DB_PASSWORD}@cluster0.jftkiye.mongodb.net/?retryWrites=true&w=majority`;
@@ -20,7 +21,7 @@ export default class Config {
     : 30;
   public static readonly RIDE_START_TIMEOUT = process.env.RIDE_START_TIMEOUT
     ? Number(process.env.RIDE_START_TIMEOUT)
-    : 1 * 1000;
+    : 120 * 1000;
 
   public static readonly RIDE_START_WAITING_FOR_OTHER_PASSENGER_TIMEOUT = process.env
     .RIDE_START_WAITING_FOR_OTHER_PASSENGER_TIMEOUT
