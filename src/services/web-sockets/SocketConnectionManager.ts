@@ -6,6 +6,7 @@ import { User } from '../../entities/User';
 import Config from '../../config/Config';
 import { ISubscribeToDriverLocationData } from './socket-messages/ISubscribeToDriverLocationData';
 import { MyWebSocket } from './MyWebSocket';
+import { IRideDb } from '../../db/interface/IRideDb';
 class SocketConnectionManager {
   server!: WebSocket.Server;
   connections!: Map<string, MyWebSocket>;
@@ -35,6 +36,9 @@ class SocketConnectionManager {
             break;
           case MessageType.SubscribeToDriverLocation:
             this.pingDriverLocation(socket, data.data);
+            break;
+          case MessageType.UnsubscribeToDriverLocation:
+            this.unsubFromDriverLocation(socket);
             break;
           default:
             console.log('Unknown message type', data.type);
@@ -83,6 +87,12 @@ class SocketConnectionManager {
     }
   }
 
+  sendRideTimeout(ride: IRideDb): void {
+    [ride.passenger.username, ride.driver.username].forEach((username) =>
+      this.connections.get(username)?.send(JSON.stringify({ type: MessageType.RideTimeout, data: { ride } }))
+    );
+  }
+
   pingDriverLocation(socket: MyWebSocket, data: ISubscribeToDriverLocationData) {
     const driver = data.ride.driver as User;
     const intervalId = setInterval(async () => {
@@ -92,6 +102,10 @@ class SocketConnectionManager {
     }, Config.DRIVER_LOCATION_PING_INTERVAL);
 
     socket._intervals.push(intervalId);
+  }
+
+  unsubFromDriverLocation(socket: MyWebSocket) {
+    socket._intervals.forEach((interval) => clearInterval(interval));
   }
 
   broadcastMessage(senderUsername: string, message: any) {

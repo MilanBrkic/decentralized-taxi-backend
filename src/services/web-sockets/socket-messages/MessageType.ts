@@ -8,4 +8,5 @@ export enum MessageType {
   RideTimeout = 'ride_timeout',
   ReturnDriverLocation = 'return_driver_location',
   SubscribeToDriverLocation = 'subscribe_to_driver_location',
+  UnsubscribeToDriverLocation = 'unsubscribe_to_driver_location',
 }

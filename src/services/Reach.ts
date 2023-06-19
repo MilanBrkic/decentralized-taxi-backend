@@ -10,7 +10,6 @@ import * as backend from '../smart-contracts/index.main';
 import { ReachAccount, ReachContract, ReachContractInfo, ReachEvent, ReachStdlib } from '../types/ReachTypes';
 import { Sleep } from '../utilities/Sleep';
 import { socketConnectionManager } from './web-sockets/SocketConnectionManager';
-import { MessageType } from './web-sockets/socket-messages/MessageType';
 
 export class Reach {
   stdlib!: ReachStdlib;
@@ -59,11 +58,14 @@ export class Reach {
 
       await rideModel.updateStatus(rideId, RideStatus.Started);
 
-      console.log(`adminInterfereStart will be called in ${Config.RIDE_END_TIMEOUT / 1000}s | RideId: ${rideId}`);
+      console.log(`adminInterfereEnd will be called in ${Config.RIDE_END_TIMEOUT / 1000}s | RideId: ${rideId}`);
       setTimeout(async () => {
         try {
-          await reach.adminInterfereEnd(rideId, true, true);
+          await reach.adminInterfereEnd(rideId, false, false);
           await rideModel.updateStatus(rideId, RideStatus.BeforeEndTimeout);
+
+          const ride = await rideModel.findById(rideId);
+          socketConnectionManager.sendRideTimeout(ride);
           console.log(`Admin interfered and ended the ride before | RideId: ${rideId}`);
         } catch (error: any) {
           if (!error.message.includes('getCurrentStep_') && !error.message.includes('Expected the DApp')) {
@@ -149,11 +151,7 @@ export class Reach {
         await rideModel.updateStatus(rideId, RideStatus.BeforeStartTimeout);
 
         const ride = await rideModel.findById(rideId);
-        [ride.passenger.username, ride.driver.username].forEach((username) =>
-          socketConnectionManager.connections
-            .get(username)
-            ?.send(JSON.stringify({ type: MessageType.RideTimeout, data: { ride } }))
-        );
+        socketConnectionManager.sendRideTimeout(ride);
         console.log(`Admin interfered on ride start | RideId: ${rideId}`);
 
         socketConnectionManager.connections
