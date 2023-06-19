@@ -119,11 +119,7 @@ export async function startRide(req: Request, res: Response): Promise<Response> 
   await (ride as any).save();
 
   if (!ride.passengerStats.started || !ride.driverStats.started) {
-    reach.timeOutedAdminInterfereStart(
-      ride.contractInfo,
-      ride._id,
-      Config.RIDE_START_WAITING_FOR_OTHER_PASSENGER_TIMEOUT
-    );
+    reach.timeOutedAdminInterfereStart(ride.contractInfo, ride._id, Config.RIDE_START_WAITING_FOR_OTHER_USER_TIMEOUT);
   }
 
   console.log(`ride started | RideId: ${ride._id} | User: ${user.username} | IsPassenger: ${isPassenger}`);
@@ -324,7 +320,7 @@ export async function bidOnRide(req: Request, res: Response): Promise<Response> 
   socketConnectionManager.broadcastMessage('', data);
 
   console.log(`Bid accepted | User: ${user.username} | RideId: ${ride._id} | Amount: ${body.amount}`);
-  return res.status(200).send({ message: 'bid accepted' });
+  return res.status(200).send(ride);
 }
 
 export async function getRide(req: Request, res: Response): Promise<Response> {

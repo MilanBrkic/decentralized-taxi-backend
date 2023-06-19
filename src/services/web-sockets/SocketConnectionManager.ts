@@ -1,10 +1,8 @@
 import WebSocket, { WebSocketServer } from 'ws';
-import { SocketMessageTypes } from './socket-messages/SocketMessageTypes';
 import { IConnectionData } from './socket-messages/IConnectionData';
 import { MessageType } from './socket-messages/MessageType';
 import { IReturnDriverLocationData } from './socket-messages/IReturnDriverLocationData';
 import { User } from '../../entities/User';
-import { IRideDb } from '../../db/interface/IRideDb';
 import Config from '../../config/Config';
 import { ISubscribeToDriverLocationData } from './socket-messages/ISubscribeToDriverLocationData';
 import { MyWebSocket } from './MyWebSocket';

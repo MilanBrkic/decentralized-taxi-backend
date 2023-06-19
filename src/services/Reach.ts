@@ -226,7 +226,7 @@ export class Reach {
 
     socketConnectionManager.sendRideDeployed([passenger.username, driver.username], rideId, true);
 
-    this.timeOutedAdminInterfereStart(contractInfo, rideId, Config.RIDE_START_TIMEOUT);
+    // this.timeOutedAdminInterfereStart(contractInfo, rideId, Config.RIDE_START_TIMEOUT);
 
     return contractInfo;
   }

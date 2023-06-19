@@ -23,9 +23,9 @@ export default class Config {
     ? Number(process.env.RIDE_START_TIMEOUT)
     : 5 * 1000;
 
-  public static readonly RIDE_START_WAITING_FOR_OTHER_PASSENGER_TIMEOUT = process.env
-    .RIDE_START_WAITING_FOR_OTHER_PASSENGER_TIMEOUT
-    ? Number(process.env.RIDE_START_WAITING_FOR_OTHER_PASSENGER_TIMEOUT)
+  public static readonly RIDE_START_WAITING_FOR_OTHER_USER_TIMEOUT = process.env
+    .RIDE_START_WAITING_FOR_OTHER_USER_TIMEOUT
+    ? Number(process.env.RIDE_START_WAITING_FOR_OTHER_USER_TIMEOUT)
     : 2 * 60 * 1000;
 
   public static readonly RIDE_END_TIMEOUT = process.env.RIDE_END_TIMEOUT
