@@ -38,7 +38,7 @@ class SocketConnectionManager {
             this.pingDriverLocation(socket, data.data);
             break;
           case MessageType.UnsubscribeToDriverLocation:
-            this.unsubFromDriverLocation(data.data);
+            this.unsubFromDriverLocation(socket);
             break;
           default:
             console.log('Unknown message type', data.type);
@@ -104,12 +104,8 @@ class SocketConnectionManager {
     socket._intervals.push(intervalId);
   }
 
-  unsubFromDriverLocation(data: { ride: IRideDb }) {
-    const driver = data.ride.driver as User;
-    const socketToUnsub = socketConnectionManager.connections.get(driver.username);
-    if (socketToUnsub) {
-      socketToUnsub._intervals.forEach((interval) => clearInterval(interval));
-    }
+  unsubFromDriverLocation(socket: MyWebSocket) {
+    socket._intervals.forEach((interval) => clearInterval(interval));
   }
 
   sendRideStarted(ride: IRideDb) {
