@@ -7,6 +7,7 @@ import Config from '../../config/Config';
 import { ISubscribeToDriverLocationData } from './socket-messages/ISubscribeToDriverLocationData';
 import { MyWebSocket } from './MyWebSocket';
 import { IRideDb } from '../../db/interface/IRideDb';
+import { ICoordinatesDb } from '../../db/interface/ICoordinatesDb';
 class SocketConnectionManager {
   server!: WebSocket.Server;
   connections!: Map<string, MyWebSocket>;
@@ -22,7 +23,6 @@ class SocketConnectionManager {
 
     // When a new client connects, add it to the map and assign a unique ID
     this.server.on('connection', (socket: MyWebSocket) => {
-      socket._intervals = [];
       // When the client sends a message, broadcast it to all other clients
       socket.on('message', (message) => {
         const data = JSON.parse(message.toString());
@@ -37,8 +37,14 @@ class SocketConnectionManager {
           case MessageType.SubscribeToDriverLocation:
             this.pingDriverLocation(socket, data.data);
             break;
-          case MessageType.UnsubscribeToDriverLocation:
-            this.unsubFromDriverLocation(socket);
+          case MessageType.ClearSubscriptions:
+            this.clearIntervals(socket);
+            break;
+          case MessageType.SubscribeToLocationSharing:
+            this.subscribeToLocationSharing(socket, data.data);
+            break;
+          case MessageType.ShareLocation:
+            this.locationSharingMessage(socket, data.data);
             break;
           default:
             console.log('Unknown message type', data.type);
@@ -56,6 +62,18 @@ class SocketConnectionManager {
     });
   }
 
+  locationSharingMessage(socket: MyWebSocket, data: { ride: IRideDb; location: ICoordinatesDb; username: string }) {
+    console.log('location sharing message', JSON.stringify(data));
+  }
+
+  subscribeToLocationSharing(socket: MyWebSocket, data: { ride: IRideDb }) {
+    const intervalId = setInterval(async () => {
+      socket.sendObject(MessageType.SubscribeToLocationSharing, data);
+    }, Config.LOCATION_SHARING_PING_INTERVAL);
+
+    socket._intervals.push(intervalId);
+  }
+
   public getConnections(): Map<string, WebSocket> {
     return this.connections;
   }
@@ -65,7 +83,7 @@ class SocketConnectionManager {
 
     sockets.forEach((socket) => {
       if (socket) {
-        socket.send(JSON.stringify({ type: MessageType.RideDeployed, data: { rideId, success } }));
+        socket.sendObject(MessageType.RideDeployed, { rideId, success });
       }
     });
   }
@@ -73,7 +91,9 @@ class SocketConnectionManager {
   connectionMessage(socket: MyWebSocket, data: IConnectionData) {
     const username = data.username;
     this.connections.set(username, socket);
-    (socket as any)._username = username;
+    socket._username = username;
+    socket._intervals = [];
+    socket.sendObject = (type: MessageType, data?: any) => socket.send(JSON.stringify({ type, data }));
     console.log(`Client connected: ${username}`);
   }
 
@@ -83,13 +103,13 @@ class SocketConnectionManager {
     const passengerSocket = this.connections.get(passengerUsername);
 
     if (passengerSocket) {
-      passengerSocket.send(JSON.stringify({ type: MessageType.ReturnDriverLocation, data }));
+      passengerSocket.sendObject(MessageType.ReturnDriverLocation, data);
     }
   }
 
   sendRideTimeout(ride: IRideDb): void {
     [ride.passenger.username, ride.driver.username].forEach((username) =>
-      this.connections.get(username)?.send(JSON.stringify({ type: MessageType.RideTimeout, data: { ride } }))
+      this.connections.get(username)?.sendObject(MessageType.RideTimeout, { ride })
     );
   }
 
@@ -98,26 +118,26 @@ class SocketConnectionManager {
     const intervalId = setInterval(async () => {
       socketConnectionManager.connections
         .get(driver.username)
-        ?.send(JSON.stringify({ type: MessageType.ReturnDriverLocation, data: { ride: data.ride } }));
+        ?.sendObject(MessageType.ReturnDriverLocation, { ride: data.ride });
     }, Config.DRIVER_LOCATION_PING_INTERVAL);
 
     socket._intervals.push(intervalId);
   }
 
-  unsubFromDriverLocation(socket: MyWebSocket) {
+  clearIntervals(socket: MyWebSocket) {
     socket._intervals.forEach((interval) => clearInterval(interval));
   }
 
   sendRideStarted(ride: IRideDb) {
     [ride.passenger.username, ride.driver.username].forEach((username) =>
-      this.connections.get(username)?.send(JSON.stringify({ type: MessageType.RideStarted, data: { ride } }))
+      this.connections.get(username)?.sendObject(MessageType.RideStarted, { ride })
     );
   }
 
   broadcastMessage(senderUsername: string, message: any) {
     this.connections.forEach((socket, username) => {
       if (username !== senderUsername) {
-        socket.send(JSON.stringify(message));
+        socket.sendObject(message);
       }
     });
   }

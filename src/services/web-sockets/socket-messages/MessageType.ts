@@ -10,4 +10,8 @@ export enum MessageType {
   ReturnDriverLocation = 'return_driver_location',
   SubscribeToDriverLocation = 'subscribe_to_driver_location',
   UnsubscribeToDriverLocation = 'unsubscribe_to_driver_location',
+  SubscribeToLocationSharing = 'subscribe_to_location_sharing',
+  UnsubscribeToLocationSharing = 'unsubscribe_to_location_sharing',
+  ShareLocation = 'share_location',
+  ClearSubscriptions = 'clear_subscriptions',
 }
