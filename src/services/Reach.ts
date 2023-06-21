@@ -57,6 +57,8 @@ export class Reach {
       );
 
       await rideModel.updateStatus(rideId, RideStatus.Started);
+      const ride = await rideModel.findById(rideId);
+      socketConnectionManager.sendRideStarted(ride);
 
       console.log(`adminInterfereEnd will be called in ${Config.RIDE_END_TIMEOUT / 1000}s | RideId: ${rideId}`);
       setTimeout(async () => {
