@@ -44,24 +44,6 @@ class RideModel {
     return ride as unknown as IRideDb;
   }
 
-  public async create(
-    passenger: IUserDb,
-    driver: IUserDb,
-    fromCoordinates: ICoordinatesDb,
-    toCoordinates: ICoordinatesDb,
-    price: number
-  ): Promise<IRideDb> {
-    const ride = this.model.create({
-      passenger,
-      driver,
-      fromCoordinates,
-      toCoordinates,
-      price,
-    });
-
-    return ride as unknown as IRideDb;
-  }
-
   public async updateStatus(rideId: string, status: RideStatus): Promise<void> {
     await this.model.updateOne({ _id: rideId }, { status, updatedAt: new Date() }).exec();
   }
@@ -120,6 +102,14 @@ class RideModel {
 
   public async deleteRideById(rideId: string): Promise<void> {
     await this.model.deleteOne({ _id: rideId }).exec();
+  }
+
+  public async updatePassengerStats(rideId: string, wasAtEndLocation: boolean, isPassenger: boolean): Promise<void> {
+    const updateObject = isPassenger
+      ? { 'passengerStats.wasAtEndLocation': wasAtEndLocation, 'updatedAt': new Date() }
+      : { 'driverStats.wasAtEndLocation': wasAtEndLocation, 'updatedAt': new Date() };
+
+    await this.model.updateOne({ _id: rideId }, updateObject).exec();
   }
 }
 

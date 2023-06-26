@@ -8,6 +8,7 @@ import { ISubscribeToDriverLocationData } from './socket-messages/ISubscribeToDr
 import { MyWebSocket } from './MyWebSocket';
 import { IRideDb } from '../../db/interface/IRideDb';
 import { ICoordinatesDb } from '../../db/interface/ICoordinatesDb';
+import rideModel from '../../db/model/RideModel';
 class SocketConnectionManager {
   server!: WebSocket.Server;
   connections!: Map<string, MyWebSocket>;
@@ -44,7 +45,7 @@ class SocketConnectionManager {
             this.subscribeToLocationSharing(socket, data.data);
             break;
           case MessageType.ShareLocation:
-            this.locationSharingMessage(socket, data.data);
+            this.locationSharingMessage(data.data);
             break;
           default:
             console.log('Unknown message type', data.type);
@@ -62,8 +63,21 @@ class SocketConnectionManager {
     });
   }
 
-  locationSharingMessage(socket: MyWebSocket, data: { ride: IRideDb; location: ICoordinatesDb; username: string }) {
-    console.log('location sharing message', JSON.stringify(data));
+  async locationSharingMessage(data: { ride: IRideDb; location: ICoordinatesDb; username: string }) {
+    const ride = data.ride;
+    const usersLocation = data.location;
+    const toCoordinates = ride.toCoordinates;
+
+    if (
+      (Number(usersLocation.latitude) < Number(toCoordinates.latitude) + Config.LOCATION_SHARING_RADIUS &&
+        Number(usersLocation.latitude) > Number(toCoordinates.latitude) - Config.LOCATION_SHARING_RADIUS) ||
+      (Number(usersLocation.longitude) < Number(toCoordinates.longitude) + Config.LOCATION_SHARING_RADIUS &&
+        Number(usersLocation.longitude) > Number(toCoordinates.longitude) - Config.LOCATION_SHARING_RADIUS)
+    ) {
+      console.log('User has arrived at the destination', data.username);
+      const isPassenger = data.username === ride.passenger.username;
+      await rideModel.updatePassengerStats(ride._id, true, isPassenger);
+    }
   }
 
   subscribeToLocationSharing(socket: MyWebSocket, data: { ride: IRideDb }) {
@@ -124,6 +138,15 @@ class SocketConnectionManager {
     socket._intervals.push(intervalId);
   }
 
+  clearIntervalsByUsernames(usernames: string[]) {
+    usernames.forEach((username) => {
+      const socket = this.connections.get(username);
+      if (socket) {
+        this.clearIntervals(socket);
+      }
+    });
+  }
+
   clearIntervals(socket: MyWebSocket) {
     socket._intervals.forEach((interval) => clearInterval(interval));
   }
@@ -134,10 +157,10 @@ class SocketConnectionManager {
     );
   }
 
-  broadcastMessage(senderUsername: string, message: any) {
+  broadcastMessage(senderUsername: string, type: MessageType, data: any) {
     this.connections.forEach((socket, username) => {
       if (username !== senderUsername) {
-        socket.sendObject(message);
+        socket.sendObject(type, data);
       }
     });
   }

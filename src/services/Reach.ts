@@ -63,11 +63,15 @@ export class Reach {
       console.log(`adminInterfereEnd will be called in ${Config.RIDE_END_TIMEOUT / 1000}s | RideId: ${rideId}`);
       setTimeout(async () => {
         try {
-          await reach.adminInterfereEnd(rideId, false, false);
-          await rideModel.updateStatus(rideId, RideStatus.BeforeEndTimeout);
-
           const ride = await rideModel.findById(rideId);
-          socketConnectionManager.sendRideTimeout(ride);
+          await reach.adminInterfereEnd(
+            rideId,
+            ride.passengerStats.wasAtEndLocation,
+            ride.driverStats.wasAtEndLocation
+          );
+          await rideModel.updateStatus(rideId, RideStatus.BeforeEndTimeout);
+          socketConnectionManager.clearIntervalsByUsernames([ride.passenger.username, ride.driver.username]);
+
           console.log(`Admin interfered and ended the ride before | RideId: ${rideId}`);
         } catch (error: any) {
           if (!error.message.includes('getCurrentStep_') && !error.message.includes('Expected the DApp')) {
