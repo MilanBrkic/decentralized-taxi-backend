@@ -22,12 +22,15 @@ class SocketConnectionManager {
     // Create a map to store active connections
     this.connections = new Map();
 
-    // When a new client connects, add it to the map and assign a unique ID
     this.server.on('connection', (socket: MyWebSocket) => {
       // When the client sends a message, broadcast it to all other clients
       socket.on('message', (message) => {
         const data = JSON.parse(message.toString());
-        console.log(`Received message from ${socket._username} | type: ${data.type}`);
+        console.log(
+          `Received message from ${socket._username} | type: ${data.type} | ${
+            data.data?.ride?._id ? `ride: ${data.data?.ride?._id}` : ''
+          }`
+        );
         switch (data.type) {
           case MessageType.Connection:
             this.connectionMessage(socket, data.data);
@@ -81,7 +84,7 @@ class SocketConnectionManager {
   }
 
   subscribeToLocationSharing(socket: MyWebSocket, data: { ride: IRideDb }) {
-    const intervalId = setInterval(async () => {
+    const intervalId = setInterval(() => {
       socket.sendObject(MessageType.SubscribeToLocationSharing, data);
     }, Config.LOCATION_SHARING_PING_INTERVAL);
 

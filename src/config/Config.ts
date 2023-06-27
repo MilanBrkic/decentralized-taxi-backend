@@ -31,7 +31,7 @@ export default class Config {
 
   public static readonly RIDE_END_TIMEOUT = process.env.RIDE_END_TIMEOUT
     ? Number(process.env.RIDE_END_TIMEOUT)
-    : 120 * 1000;
+    : 1000 * 1000;
   public static readonly LOCATION_SHARING_RADIUS = process.env.LOCATION_SHARING_RADIUS
     ? Number(process.env.LOCATION_SHARING_RADIUS)
     : 0.0005;

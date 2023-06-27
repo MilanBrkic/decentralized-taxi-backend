@@ -110,6 +110,8 @@ export class Reach {
 
       await (ride as any).save();
 
+      socketConnectionManager.clearIntervalsByUsernames([ride.passenger.username, ride.driver.username]);
+
       console.log(
         `Ride has ended | RideId: ${rideId} | Status: ${ride.status} | ${ride.passenger.username}-passengerNet: ${
           passengerNet / 1000000
@@ -160,9 +162,7 @@ export class Reach {
         socketConnectionManager.sendRideTimeout(ride);
         console.log(`Admin interfered on ride start | RideId: ${rideId}`);
 
-        socketConnectionManager.connections
-          .get(ride.driver.username)
-          ?._intervals.forEach((interval) => clearInterval(interval));
+        socketConnectionManager.clearIntervalsByUsernames([ride.driver.username]);
       } catch (error: any) {
         if (!error.message.includes('getCurrentStep_') && !error.message.includes('Expected the DApp')) {
           console.log(`Error when calling adminInterfereStart | RideId: ${rideId}`, error.message);
