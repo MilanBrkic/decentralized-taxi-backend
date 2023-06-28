@@ -22,7 +22,7 @@ export function initHttpServer() {
     return res.status(200).json({ message: 'Hello World!' });
   });
 
-  app.post('/ping', (req, res) => {
+  app.post('/health', (req, res) => {
     return res.send('pong');
   });
   app.post('/register', register);
