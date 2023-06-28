@@ -8,7 +8,7 @@
     "start": "node --experimental-modules ./build/index.js",
     "start-nodemon": "nodemon --ext 'ts,json' --exec npm start",
     "build": "tsc",
-    "build:prod": "npm ci && npx tsc",
+    "build:prod": "npm cache clean --force && npm ci && npx tsc",
     "dev": "node build/index.js"
   },
   "keywords": [],
