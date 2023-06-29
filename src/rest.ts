@@ -19,7 +19,7 @@ export function initHttpServer() {
   app.use(express.json());
   app.use(cors());
   app.get('/', (req, res) => {
-    return res.status(200).json({ message: 'pozdrav pedro!' });
+    return res.status(200).json({ message: 'pedro operi sudove!' });
   });
   app.get('/health', (req, res) => {
     return res.status(200).json({ message: 'OK' });
