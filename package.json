@@ -11,6 +11,9 @@
     "build:prod": "npm cache clean --force && npm ci && npx tsc",
     "dev": "node build/index.js"
   },
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
