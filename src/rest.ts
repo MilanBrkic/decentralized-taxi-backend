@@ -43,6 +43,10 @@ export function initHttpServer() {
 }
 
 const timerMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  if (req.url === '/health') {
+    return next();
+  }
+
   const start = new Date();
   console.log(`Received ${req.method} ${req.originalUrl}`);
 
