@@ -21,6 +21,9 @@ export function initHttpServer() {
   app.get('/', (req, res) => {
     return res.status(200).json({ message: 'Hello World!' });
   });
+  app.get('/health', (req, res) => {
+    return res.status(200).json({ message: 'OK' });
+  });
   app.post('/register', register);
   app.post('/login', login);
   app.post('/wallet', addWallet);
@@ -35,7 +38,7 @@ export function initHttpServer() {
   app.get('/ride/:id', getRide);
 
   app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
+    console.log(`SERVER listening on port ${port}`);
   });
 }
 
