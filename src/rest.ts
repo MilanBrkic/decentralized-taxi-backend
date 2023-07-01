@@ -43,12 +43,18 @@ export function initHttpServer() {
 }
 
 const timerMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const isHealth = req.url === '/health';
+
   const start = new Date();
-  console.log(`Received ${req.method} ${req.originalUrl}`);
+  if (!isHealth) {
+    console.log(`${req.method} ${req.originalUrl} received`);
+  }
 
   res.on('finish', () => {
     const elapsed = new Date().getTime() - start.getTime();
-    console.log(`${req.method} ${req.originalUrl} ${res.statusCode} in ${elapsed}ms`);
+    if (!isHealth) {
+      console.log(`${req.method} ${req.originalUrl} ${res.statusCode} in ${elapsed}ms`);
+    }
   });
   next();
 };
