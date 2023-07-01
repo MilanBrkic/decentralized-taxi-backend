@@ -63,7 +63,7 @@ class SocketConnectionManager {
       socket.on('close', () => {
         const username = socket._username;
         this.connections.delete(username);
-        socket._intervals.forEach((interval) => clearInterval(interval));
+        this.clearIntervals(socket);
         console.log(`Client disconnected: ${username}`);
       });
     });
