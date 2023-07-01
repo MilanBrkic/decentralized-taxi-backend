@@ -9,15 +9,16 @@ import { MyWebSocket } from './MyWebSocket';
 import { IRideDb } from '../../db/interface/IRideDb';
 import { ICoordinatesDb } from '../../db/interface/ICoordinatesDb';
 import rideModel from '../../db/model/RideModel';
+import { Server } from 'http';
 class SocketConnectionManager {
   server!: WebSocket.Server;
   connections!: Map<string, MyWebSocket>;
   constructor() {}
 
-  public init() {
+  public init(server: Server) {
     // Create a new WebSocket server
-    this.server = new WebSocketServer({ port: 8080 });
-    console.log('WebSocket server started on port 8080');
+    this.server = new WebSocketServer({ server });
+    console.log(`WebSocket server started ${(server.address() as any).port}...`);
 
     // Create a map to store active connections
     this.connections = new Map();

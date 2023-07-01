@@ -11,9 +11,10 @@ import {
 } from './services/RideService';
 import { addWallet, getUser, login, register } from './services/UserService';
 import cors from 'cors';
-export function initHttpServer() {
+import { Server } from 'http';
+export function initHttpServer(): Server {
   const app = express();
-  const port = process.env.PORT || 3000;
+  const port = Number(process.env.PORT) || 3000;
 
   app.use(timerMiddleware);
   app.use(express.json());
@@ -37,9 +38,10 @@ export function initHttpServer() {
   app.post('/ride/:id/cancel', cancelRide);
   app.get('/ride/:id', getRide);
 
-  app.listen(port, () => {
-    console.log(`SERVER listening on port ${port}`);
+  const server = app.listen(port, () => {
+    console.log(`Http server listening on port ${port}...`);
   });
+  return server;
 }
 
 const timerMiddleware = (req: Request, res: Response, next: NextFunction) => {

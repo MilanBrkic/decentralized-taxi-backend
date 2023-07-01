@@ -6,8 +6,8 @@ import { socketConnectionManager } from './services/web-sockets/SocketConnection
 async function init() {
   await mongooseDb.connect();
   await reach.init();
-  socketConnectionManager.init();
-  initHttpServer();
+  const server = initHttpServer();
+  socketConnectionManager.init(server);
 }
 
 init();
