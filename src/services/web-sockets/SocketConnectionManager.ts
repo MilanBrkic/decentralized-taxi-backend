@@ -154,6 +154,7 @@ class SocketConnectionManager {
 
   clearIntervals(socket: MyWebSocket) {
     socket._intervals.forEach((interval) => clearInterval(interval));
+    socket._intervals = [];
   }
 
   sendRideStarted(ride: IRideDb) {
