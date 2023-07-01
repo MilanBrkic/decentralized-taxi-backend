@@ -13,7 +13,7 @@ import { addWallet, getUser, login, register } from './services/UserService';
 import cors from 'cors';
 export function initHttpServer() {
   const app = express();
-  const port = 3000;
+  const port = process.env.PORT || 3000;
 
   app.use(timerMiddleware);
   app.use(express.json());
