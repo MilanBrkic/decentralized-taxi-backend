@@ -25,6 +25,8 @@ class SocketConnectionManager {
 
     this.server.on('connection', (socket: MyWebSocket) => {
       // When the client sends a message, broadcast it to all other clients
+      socket._intervals = [];
+
       socket.on('message', (message) => {
         const data = JSON.parse(message.toString());
         console.log(
@@ -110,7 +112,6 @@ class SocketConnectionManager {
     const username = data.username;
     this.connections.set(username, socket);
     socket._username = username;
-    socket._intervals = [];
     socket.sendObject = (type: MessageType, data?: any) => socket.send(JSON.stringify({ type, data }));
     console.log(`Client connected: ${username}`);
   }
