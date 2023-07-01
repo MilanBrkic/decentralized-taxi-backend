@@ -24,6 +24,7 @@ class SocketConnectionManager {
     this.connections = new Map();
 
     this.server.on('connection', (socket: MyWebSocket) => {
+      console.log('New connection');
       // When the client sends a message, broadcast it to all other clients
       socket._intervals = [];
 
