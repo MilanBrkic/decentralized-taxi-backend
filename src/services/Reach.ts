@@ -10,6 +10,7 @@ import * as backend from '../smart-contracts/index.main';
 import { ReachAccount, ReachContract, ReachContractInfo, ReachEvent, ReachStdlib } from '../types/ReachTypes';
 import { Sleep } from '../utilities/Sleep';
 import { socketConnectionManager } from './web-sockets/SocketConnectionManager';
+import { MessageType } from './web-sockets/socket-messages/MessageType';
 
 export class Reach {
   stdlib!: ReachStdlib;
@@ -110,6 +111,11 @@ export class Reach {
 
       await (ride as any).save();
 
+      socketConnectionManager.sendMessageByUsernames(
+        [ride.passenger.username, ride.driver.username],
+        MessageType.RideEnded,
+        { ride }
+      );
       socketConnectionManager.clearIntervalsByUsernames([ride.passenger.username, ride.driver.username]);
 
       console.log(

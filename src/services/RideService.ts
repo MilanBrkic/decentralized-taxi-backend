@@ -109,6 +109,7 @@ export async function startRide(req: Request, res: Response): Promise<Response> 
     await reach.startRide(user, ride.contractInfo);
   } catch (error: any) {
     console.log(`could not start ride | RideId: ${ride._id} | Error: ${error.stack}`);
+    await rideModel.updateStatus(ride._id, RideStatus.Failed);
     return res.status(500).json({ message: error.message });
   }
 
@@ -165,6 +166,7 @@ export async function endRide(req: Request, res: Response): Promise<Response> {
     await reach.endRide(user, ride.contractInfo);
   } catch (error: any) {
     console.log(`could not end ride | RideId: ${ride._id} | Error: ${error.stack}`);
+    await rideModel.updateStatus(ride._id, RideStatus.Failed);
     return res.status(500).json({ message: error.message });
   }
 

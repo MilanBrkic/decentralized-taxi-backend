@@ -7,6 +7,7 @@ export enum MessageType {
   RideCanceled = 'ride_canceled',
   RideTimeout = 'ride_timeout',
   RideStarted = 'ride_started',
+  RideEnded = 'ride_ended',
   ReturnDriverLocation = 'return_driver_location',
   SubscribeToDriverLocation = 'subscribe_to_driver_location',
   UnsubscribeToDriverLocation = 'unsubscribe_to_driver_location',

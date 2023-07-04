@@ -24,10 +24,8 @@ class SocketConnectionManager {
     this.connections = new Map();
 
     this.server.on('connection', (socket: MyWebSocket) => {
-      console.log('New connection');
       // When the client sends a message, broadcast it to all other clients
       socket._intervals = [];
-
       socket.on('message', (message) => {
         const data = JSON.parse(message.toString());
         console.log(
@@ -167,6 +165,15 @@ class SocketConnectionManager {
   broadcastMessage(senderUsername: string, type: MessageType, data: any) {
     this.connections.forEach((socket, username) => {
       if (username !== senderUsername) {
+        socket.sendObject(type, data);
+      }
+    });
+  }
+
+  sendMessageByUsernames(usernames: string[], type: MessageType, data: any) {
+    usernames.forEach((username) => {
+      const socket = this.connections.get(username);
+      if (socket) {
         socket.sendObject(type, data);
       }
     });
