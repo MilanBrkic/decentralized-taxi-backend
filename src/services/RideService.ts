@@ -51,6 +51,9 @@ export async function acceptRide(req: Request, res: Response): Promise<any> {
 
   res.status(200).json({ message: 'ride started', ride_id: ride._id });
   socketConnectionManager.connections.get(driver.username)?.sendObject(MessageType.RideArranged, { ride });
+  socketConnectionManager.broadcastMessage([passenger.username, driver.username], MessageType.RideCanceled, {
+    _id: ride._id,
+  });
 
   let contractInfo;
   try {
@@ -206,7 +209,7 @@ export async function requestRide(req: Request, res: Response): Promise<Response
 
   const ride = await rideModel.createRide(user, body.from_coordinates, body.to_coordinates);
 
-  socketConnectionManager.broadcastMessage(body.username, MessageType.RideRequested, { ride });
+  socketConnectionManager.broadcastMessage([user.username], MessageType.RideRequested, { ride });
 
   console.log(`ride requested | RideId: ${ride._id} | Passenger: ${user.username}`);
 
@@ -313,7 +316,7 @@ export async function bidOnRide(req: Request, res: Response): Promise<Response> 
       }),
   };
 
-  socketConnectionManager.broadcastMessage('', MessageType.Bid, data);
+  socketConnectionManager.broadcastMessage([], MessageType.Bid, data);
 
   console.log(`Bid accepted | User: ${user.username} | RideId: ${ride._id} | Amount: ${body.amount}`);
   return res.status(200).send(ride);
@@ -354,7 +357,7 @@ export async function cancelRide(req: Request, res: Response): Promise<Response>
 
   await rideModel.deleteRideById(rideId);
 
-  socketConnectionManager.broadcastMessage(body.username, MessageType.RideCanceled, { _id: ride._id });
+  socketConnectionManager.broadcastMessage([body.username], MessageType.RideCanceled, { _id: ride._id });
 
   return res.status(200).json({ message: 'ride canceled' });
 }

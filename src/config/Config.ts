@@ -22,7 +22,7 @@ export default class Config {
     : 30;
   public static readonly RIDE_START_TIMEOUT = process.env.RIDE_START_TIMEOUT
     ? Number(process.env.RIDE_START_TIMEOUT)
-    : 1000 * 1000;
+    : 5 * 1000;
 
   public static readonly RIDE_START_WAITING_FOR_OTHER_USER_TIMEOUT = process.env
     .RIDE_START_WAITING_FOR_OTHER_USER_TIMEOUT

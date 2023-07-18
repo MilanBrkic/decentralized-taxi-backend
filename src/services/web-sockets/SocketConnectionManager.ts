@@ -162,9 +162,9 @@ class SocketConnectionManager {
     );
   }
 
-  broadcastMessage(senderUsername: string, type: MessageType, data: any) {
+  broadcastMessage(excludedUsers: string[], type: MessageType, data: any) {
     this.connections.forEach((socket, username) => {
-      if (username !== senderUsername) {
+      if (!excludedUsers.includes(username)) {
         socket.sendObject(type, data);
       }
     });
