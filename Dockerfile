@@ -1,5 +1,5 @@
 # Specify the base image
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Set the working directory
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
 # Copy the rest of the application files to the container
 COPY . .
@@ -16,5 +16,14 @@ COPY . .
 # Build the TypeScript files
 RUN npm run build
 
-# Set the command to start the application
-CMD ["npm", "run", "dev"]
+FROM node:20-alpine AS production
+
+COPY package*.json .env ./ 
+
+RUN npm ci --only=production
+ENV NODE_ENV=development
+
+COPY --from=base /app/build ./build
+
+CMD ["npm", "run", "start"]
+
